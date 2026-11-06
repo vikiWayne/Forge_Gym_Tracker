@@ -1,0 +1,30 @@
+import { categoryRoutes } from "./features/categories/categories.routes.js";
+import express from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { authRoutes } from "./features/auth/auth.routes.js";
+import { profileRoutes } from "./features/profile/profile.routes.js";
+import { exerciseRoutes } from "./features/exercises/exercises.routes.js";
+import { workoutRoutes } from "./features/workouts/workouts.routes.js";
+import { trainingRoutes } from "./features/workouts/training.routes.js";
+import { planRoutes } from "./features/plans/plans.routes.js";
+import { authenticate } from "./middleware/authenticate.js";
+import { checkOrigin } from "./middleware/checkOrigin.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+export const app = express();
+if (process.env.TRUST_PROXY === "1") app.set("trust proxy", 1);
+app.use(helmet());
+app.use(express.json({ limit: "32kb" }));
+app.use("/api", checkOrigin, rateLimit({ windowMs: 60000, limit: 180 }));
+authRoutes(app);
+app.use("/api", authenticate);
+profileRoutes(app);
+categoryRoutes(app);
+exerciseRoutes(app);
+workoutRoutes(app);
+trainingRoutes(app);
+planRoutes(app);
+app.use("/api", (req, res) =>
+  res.status(404).json({ error: "Endpoint not found." }),
+);
+app.use(errorHandler);

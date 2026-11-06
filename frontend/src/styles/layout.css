@@ -1,0 +1,237 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  letter-spacing: -1.8px;
+  font-size: 31px;
+  gap: 9px;
+  color: var(--text);
+}
+.brand-icon {
+  width: 37px;
+  height: 37px;
+  background: var(--primary);
+  color: var(--primary-text);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-7deg);
+}
+.brand-period {
+  color: var(--accent);
+  margin-left: -8px;
+}
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+}
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 228px;
+  padding: 31px 20px 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+}
+.sidebar > .brand,
+.sidebar > a {
+  padding-left: 9px;
+}
+.nav-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--text-faint);
+  margin: 45px 10px 15px;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 46px;
+  padding: 12px;
+  margin-bottom: 5px;
+  border-radius: 10px;
+  width: 100%;
+  position: relative;
+}
+.nav-link:hover {
+  background: var(--surface-soft);
+}
+.nav-link.active {
+  color: var(--accent-soft-text);
+  background: var(--accent-soft);
+}
+.nav-arrow {
+  margin-left: auto;
+  opacity: 0;
+}
+.nav-link.active .nav-arrow {
+  opacity: 1;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 36px;
+}
+.journey-card {
+  border-radius: 14px;
+  background: var(--peach);
+  padding: 17px;
+  margin: 15px 0 22px;
+  color: var(--peach-text);
+  position: relative;
+  overflow: hidden;
+}
+.journey-icon {
+  display: flex;
+  margin-bottom: 19px;
+}
+.journey-card strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.journey-card p {
+  font-size: 10px;
+  line-height: 1.7;
+  margin-top: 8px;
+  color: var(--peach-text);
+}
+.logout {
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  padding-top: 17px;
+  margin-top: 8px;
+}
+.workspace {
+  margin-left: 228px;
+  width: calc(100% - 228px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app-header {
+  height: 81px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 39px;
+  gap: 20px;
+  background: var(--background);
+}
+.breadcrumb {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-muted);
+}
+.breadcrumb span {
+  color: var(--text-faint);
+}
+.breadcrumb strong {
+  color: var(--text);
+  font-weight: 500;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 25px;
+  min-height: 35px;
+}
+.theme-toggle > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+.theme-toggle > .selected {
+  background: var(--surface);
+  box-shadow: 0 1px 5px #32254012;
+  color: var(--text);
+}
+.account-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  height: 33px;
+  width: 33px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--peach);
+  color: var(--peach-text);
+}
+.page-container {
+  padding: 33px 39px 0;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  animation: arrive 0.25s ease-out;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 27px;
+}
+.eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.page-description {
+  margin-top: 9px;
+  font-size: 12px;
+}
+.workspace-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 29px 39px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  font-size: 9px;
+  color: var(--text-muted);
+}
+.workspace-footer > span:first-child {
+  font-size: 7px;
+  letter-spacing: 1.5px;
+}
+.workspace-footer .accent {
+  font-size: 18px;
+  margin-left: 6px;
+}
+
+.page-header h1 {
+  overflow-wrap: anywhere;
+}
