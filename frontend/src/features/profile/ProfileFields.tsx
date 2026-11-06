@@ -19,9 +19,9 @@ export function ProfileFields({ user }: { user?: User | null }) {
           <input
             name="weight"
             type="number"
-            min="1"
+            min="0.01"
             max="500"
-            step="0.1"
+            step="0.01"
             required
             defaultValue={user?.weight}
           />

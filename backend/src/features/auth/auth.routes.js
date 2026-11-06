@@ -1,3 +1,5 @@
+import { issueRecoveryCode } from "./recovery.js";
+import { onboardingRoutes } from "./onboarding.routes.js";
 import { randomUUID } from "node:crypto";
 import rateLimit from "express-rate-limit";
 import { db } from "../../database/connection.js";
@@ -7,6 +9,7 @@ import { hashPassword, verifyPassword } from "./passwords.js";
 import { createSession, publicUser } from "./sessions.js";
 export function authRoutes(app) {
   const limit = rateLimit({ windowMs: 900000, limit: 30 });
+  onboardingRoutes(app, limit, rateLimit({ windowMs: 60000, limit: 60 }));
   app.post(
     "/api/auth/register",
     limit,
@@ -17,12 +20,10 @@ export function authRoutes(app) {
           .prepare("SELECT id FROM users WHERE username=?")
           .get(account.username)
       ) {
-        return res
-          .status(409)
-          .json({
-            error:
-              "That username already has a training buddy! Choose another username, or sign in if this account is yours.",
-          });
+        return res.status(409).json({
+          error:
+            "That username already has a training buddy! Choose another username, or sign in if this account is yours.",
+        });
       }
       const id = randomUUID();
       db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?)").run(
@@ -33,10 +34,15 @@ export function authRoutes(app) {
         account.weight,
         account.sex,
       );
+      const recovery_code = issueRecoveryCode(id);
+      res.set("Cache-Control", "no-store");
       createSession(res, id);
       res
         .status(201)
-        .json(publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)));
+        .json({
+          ...publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
+          recovery_code,
+        });
     }),
   );
   app.post(

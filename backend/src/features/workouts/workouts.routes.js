@@ -1,3 +1,4 @@
+import { dateSchema, liftWeightSchema } from "../../shared/validation.js";
 import { db } from "../../database/connection.js";
 import { handler } from "../../shared/handler.js";
 import { z } from "zod";
@@ -7,21 +8,13 @@ const workoutSchema = z.object({
   sets: z
     .array(
       z.object({
-        weight: z.number().min(0).max(1500),
+        weight: liftWeightSchema,
         reps: z.number().int().min(1).max(1000),
       }),
     )
     .min(1)
     .max(50),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .refine(
-      (value) =>
-        !Number.isNaN(Date.parse(value)) &&
-        new Date(value).toISOString().slice(0, 10) === value,
-      "Invalid date",
-    ),
+  date: dateSchema,
   notes: z.string().max(1000).default(""),
 });
 function saveSets(id, sets) {

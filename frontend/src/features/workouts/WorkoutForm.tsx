@@ -103,6 +103,7 @@ export function WorkoutForm({
         <input
           name="date"
           type="date"
+          max={localDate()}
           defaultValue={log?.date || localDate()}
           required
         />
@@ -120,7 +121,7 @@ export function WorkoutForm({
         <Link to="/workouts" className="button secondary">
           Cancel
         </Link>
-        <button className="button primary" disabled={pending}>
+        <button className="button workout-cta" disabled={pending}>
           <Check size={17} />
           {pending ? "Saving…" : log ? "Save changes" : "Save workout"}
         </button>

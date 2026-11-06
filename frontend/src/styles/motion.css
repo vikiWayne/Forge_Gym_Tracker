@@ -1,0 +1,468 @@
+/* Short, purposeful motion. Every effect has a static reduced-motion fallback. */
+:root {
+  --motion-fast: 150ms;
+  --motion-normal: 260ms;
+  --motion-enter: 420ms;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.page-scene {
+  animation: scene-in var(--motion-enter) var(--motion-ease) both;
+}
+.page-scene > .page-header {
+  animation: scene-in 360ms var(--motion-ease) both;
+}
+.page-scene > .panel,
+.page-scene > .welcome-banner,
+.page-scene > .together-banner,
+.page-scene > .editor-layout,
+.page-scene > .profile-grid {
+  animation: scene-in 450ms var(--motion-ease) 50ms both;
+}
+.stats-grid > *,
+.exercise-grid > *,
+.progress-grid > *,
+.plans-list > * {
+  animation: card-in 400ms var(--motion-ease) both;
+}
+.stats-grid > :nth-child(2),
+.exercise-grid > :nth-child(2),
+.progress-grid > :nth-child(2) {
+  animation-delay: 45ms;
+}
+.stats-grid > :nth-child(3),
+.exercise-grid > :nth-child(3),
+.progress-grid > :nth-child(3) {
+  animation-delay: 90ms;
+}
+.stats-grid > :nth-child(4),
+.exercise-grid > :nth-child(4) {
+  animation-delay: 135ms;
+}
+.auth-story,
+.auth-form-panel {
+  animation: scene-in 500ms var(--motion-ease) both;
+}
+.auth-form-panel {
+  animation-delay: 90ms;
+}
+.auth-form-panel form {
+  animation: scene-in 280ms var(--motion-ease) both;
+}
+.auth-illustration > svg,
+.banner-art > svg {
+  animation: lift-in 800ms var(--motion-ease) 100ms both;
+}
+.floating-label {
+  animation: label-in 650ms var(--motion-ease) 200ms both;
+}
+.button,
+.icon-button,
+.text-link,
+.nav-link,
+.account-avatar,
+.auth-tabs button,
+.theme-toggle,
+.switch,
+.category-suggestions button {
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast),
+    color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    border-color var(--motion-fast);
+}
+.button:active:not(:disabled),
+.icon-button:active:not(:disabled),
+.theme-toggle:active,
+.auth-tabs button:active,
+.account-avatar:active {
+  transform: scale(0.96);
+}
+.nav-link:active {
+  transform: scale(0.98);
+}
+.button > svg,
+.icon-button > svg,
+.text-link > svg,
+.nav-link > svg,
+.theme-toggle svg,
+.empty-icon svg {
+  transition: transform var(--motion-normal) var(--motion-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .button:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+  .button:hover:not(:disabled) > svg:last-child,
+  .text-link:hover > svg {
+    transform: translateX(2px);
+  }
+  .icon-button:hover:not(:disabled) > svg {
+    transform: rotate(-7deg) scale(1.08);
+  }
+  .nav-link:hover > svg:first-child {
+    transform: translateY(-2px);
+  }
+  .nav-link:hover .nav-arrow {
+    transform: translate(2px, -2px);
+  }
+  .theme-toggle:hover svg {
+    transform: rotate(12deg);
+  }
+  .empty-state:hover .empty-icon svg {
+    transform: rotate(-9deg);
+  }
+}
+input,
+select,
+textarea {
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    background var(--motion-fast);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 11%, transparent);
+}
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  animation: gentle-nudge 230ms ease-out;
+}
+.overlay {
+  animation: veil-in 180ms ease-out both;
+}
+.modal {
+  animation: modal-in 280ms var(--motion-ease) both;
+}
+.modal .section-head .icon-button:active {
+  transform: rotate(90deg) scale(0.94);
+}
+.set-row {
+  animation: set-in 260ms var(--motion-ease) both;
+}
+.set-summary {
+  animation: small-pop 250ms var(--motion-ease) both;
+}
+.switch > span {
+  transition:
+    transform 220ms cubic-bezier(0.2, 1.4, 0.5, 1),
+    background 180ms;
+}
+.ready-indicator {
+  animation: readiness-in 420ms var(--motion-ease) both;
+}
+.ready-indicator > span {
+  animation: small-pop 420ms var(--motion-ease) 100ms both;
+}
+.exercise-card {
+  transition:
+    transform 200ms var(--motion-ease),
+    box-shadow 200ms,
+    border-color 220ms;
+}
+.error-message {
+  animation: gentle-nudge 250ms ease-out both;
+}
+.success-message {
+  animation: small-pop 300ms var(--motion-ease) both;
+}
+.empty-state,
+.loading-state {
+  animation: veil-in 260ms ease-out both;
+}
+.week-day.done svg {
+  animation: check-in 350ms var(--motion-ease) both;
+}
+.chart-legend {
+  animation: veil-in 400ms ease-out both;
+}
+tbody tr {
+  animation: row-in 240ms var(--motion-ease) both;
+}
+.interaction-effects {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 150;
+}
+.interaction-tap {
+  position: absolute;
+  left: var(--tap-x);
+  top: var(--tap-y);
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 150;
+  animation: tap-ring 420ms ease-out both;
+}
+.action-feedback-layer {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 120;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 32px);
+}
+.action-progress,
+.action-celebration {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 6px 28px #00000012;
+}
+.action-progress {
+  padding: 11px 14px;
+  font-size: 13px;
+  animation: scene-in 180ms ease-out both;
+}
+.action-celebration {
+  position: relative;
+  padding: 10px 9px 10px 12px;
+  animation: celebration-in 380ms var(--motion-ease) both;
+  font-size: 13px;
+  pointer-events: auto;
+}
+.celebration-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  color: var(--success-text);
+  animation: check-in 420ms var(--motion-ease) both;
+}
+.celebration-spark {
+  position: absolute;
+  top: 50%;
+  left: 25px;
+  width: 5px;
+  height: 5px;
+  border-radius: 2px;
+  background: var(--accent);
+  pointer-events: none;
+  animation: spark-out 600ms ease-out both;
+}
+.spark-one {
+  --spark-x: -25px;
+  --spark-y: -31px;
+}
+.spark-two {
+  --spark-x: 2px;
+  --spark-y: -38px;
+  animation-delay: 40ms;
+}
+.spark-three {
+  --spark-x: 27px;
+  --spark-y: -26px;
+  animation-delay: 80ms;
+}
+@keyframes scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes lift-in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes label-in {
+  from {
+    opacity: 0;
+    translate: -5px 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes set-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes small-pop {
+  0% {
+    opacity: 0.3;
+    scale: 0.97;
+  }
+  70% {
+    scale: 1.015;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes readiness-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.94);
+  }
+  70% {
+    transform: translateY(0) scale(1.035);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes gentle-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-3px);
+  }
+  65% {
+    transform: translateX(3px);
+  }
+}
+@keyframes check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.65) rotate(-16deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes row-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes tap-ring {
+  from {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.4);
+  }
+}
+@keyframes celebration-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes spark-out {
+  from {
+    opacity: 0.8;
+    transform: translate(0, 0) rotate(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--spark-x), var(--spark-y)) rotate(100deg);
+  }
+}
+@media (max-width: 650px) {
+  .action-feedback-layer {
+    right: 16px;
+    bottom: 84px;
+  }
+  .action-celebration {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .interaction-tap,
+  .celebration-spark {
+    display: none;
+  }
+  .button:hover,
+  .button:active,
+  .icon-button:hover,
+  .icon-button:active,
+  .nav-link:active,
+  .theme-toggle:active,
+  .account-avatar:active {
+    transform: none;
+  }
+  .button:hover > svg,
+  .icon-button:hover > svg,
+  .text-link:hover > svg,
+  .nav-link:hover > svg,
+  .theme-toggle:hover svg,
+  .empty-state:hover .empty-icon svg {
+    transform: none;
+  }
+}

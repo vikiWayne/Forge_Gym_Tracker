@@ -1,3 +1,4 @@
+import { useMotionPreference } from "../../shared/hooks/useMotionPreference";
 import {
   Area,
   CartesianGrid,
@@ -11,6 +12,7 @@ import {
 import type { Log } from "../../shared/api/types";
 import { EmptyState } from "../../shared/ui/Feedback";
 export function ExerciseChart({ logs, id }: { logs: Log[]; id: string }) {
+  const motionAllowed = useMotionPreference();
   if (!logs.length)
     return (
       <EmptyState title="A blank canvas for your progress.">
@@ -63,14 +65,14 @@ export function ExerciseChart({ logs, id }: { logs: Log[]; id: string }) {
               dataKey="label"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
               minTickGap={35}
             />
             <YAxis
               yAxisId="weight"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
             />
             <YAxis
               yAxisId="reps"
@@ -78,7 +80,7 @@ export function ExerciseChart({ logs, id }: { logs: Log[]; id: string }) {
               axisLine={false}
               tickLine={false}
               allowDecimals={false}
-              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
             />
             <Tooltip
               contentStyle={{
@@ -96,7 +98,9 @@ export function ExerciseChart({ logs, id }: { logs: Log[]; id: string }) {
               fill={`url(#fill-${id})`}
               stroke="var(--chart-primary)"
               strokeWidth={3}
-              isAnimationActive={false}
+              isAnimationActive={motionAllowed}
+              animationDuration={650}
+              animationEasing="ease-out"
             />
             <Line
               yAxisId="reps"
@@ -106,7 +110,9 @@ export function ExerciseChart({ logs, id }: { logs: Log[]; id: string }) {
               stroke="var(--chart-secondary)"
               strokeWidth={2}
               dot={{ r: 3 }}
-              isAnimationActive={false}
+              isAnimationActive={motionAllowed}
+              animationDuration={650}
+              animationEasing="ease-out"
             />
           </ComposedChart>
         </ResponsiveContainer>

@@ -1,3 +1,5 @@
+import { MobileNav } from "./MobileNav";
+import { InvitationNotifications } from "../../features/plans/InvitationNotifications";
 import {
   Activity,
   ArrowUpRight,
@@ -8,8 +10,12 @@ import {
   TrendingUp,
   Users,
   Zap,
+  Scale,
+  Utensils,
+  Plus,
+  CalendarDays,
 } from "lucide-react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
 import { useTraining } from "../providers/TrainingProvider";
 import { useAsyncAction } from "../../shared/hooks/useAsyncAction";
@@ -20,14 +26,18 @@ const navigation = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/workouts", label: "Workout log", icon: Dumbbell },
   { to: "/exercises", label: "Exercises", icon: Activity },
+  { to: "/protein", label: "Protein", icon: Utensils },
+  { to: "/body-weight", label: "Body weight", icon: Scale },
+  { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/progress", label: "Progress", icon: TrendingUp },
   { to: "/together", label: "Together", icon: Users },
 ];
 export function AppLayout() {
   const { user, logout } = useAuth();
-  const { loading, error: dataError, logs, refresh } = useTraining();
+  const { loading, error: dataError, logs, refresh, plans } = useTraining();
   const { pending, error, run } = useAsyncAction();
   const { pathname } = useLocation();
+  const invitationCount = plans.filter((plan) => !plan.accepted).length;
   const title =
     navigation.find((item) => pathname.startsWith(item.to))?.label ||
     "Your profile";
@@ -46,12 +56,22 @@ export function AppLayout() {
             <NavLink
               key={to}
               to={to}
+              aria-label={
+                to === "/together" && invitationCount
+                  ? `Together, ${invitationCount} pending invitations`
+                  : label
+              }
               className={({ isActive }) =>
                 `nav-link ${isActive ? "active" : ""}`
               }
             >
               <Icon size={19} />
               <span>{label}</span>
+              {to === "/together" && invitationCount > 0 && (
+                <b className="nav-invitation-count" aria-hidden="true">
+                  {invitationCount}
+                </b>
+              )}
               <ArrowUpRight className="nav-arrow" size={15} />
             </NavLink>
           ))}
@@ -85,10 +105,21 @@ export function AppLayout() {
       <div className="workspace">
         <header className="app-header">
           <div className="breadcrumb">
-            Your workspace <span>/</span>
+            <span className="breadcrumb-home">Your workspace</span>
+            <span>/</span>
             <strong>{title}</strong>
           </div>
           <div className="header-actions">
+            {!pathname.startsWith("/workouts/") && (
+              <Link
+                to="/workouts/new"
+                className="button workout-cta header-workout-cta"
+              >
+                <Plus size={18} />
+                Log workout
+              </Link>
+            )}
+            <InvitationNotifications />
             <ThemeToggle />
             <NavLink
               className="account-avatar"
@@ -114,7 +145,9 @@ export function AppLayout() {
               </button>
             </section>
           ) : (
-            <Outlet />
+            <div className="page-scene" key={pathname}>
+              <Outlet />
+            </div>
           )}
         </main>
         <footer className="workspace-footer">
@@ -124,6 +157,7 @@ export function AppLayout() {
           </span>
         </footer>
       </div>
+      <MobileNav />
     </div>
   );
 }

@@ -45,7 +45,7 @@ export function SetEditor({
               type="number"
               min={0}
               max={1500}
-              step="0.5"
+              step="0.01"
               placeholder="0"
               value={set.weight}
               onChange={(event) =>
@@ -101,7 +101,7 @@ export function SetEditor({
           Repeat last set
         </button>
       </div>
-      <p className="set-summary" role="status">
+      <p className="set-summary" role="status" key={sets.length}>
         {sets.length} set{sets.length === 1 ? "" : "s"} ·{" "}
         {sets.reduce((sum, set) => sum + Number(set.reps), 0)} reps ·{" "}
         {sets

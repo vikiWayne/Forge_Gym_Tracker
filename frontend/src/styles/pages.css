@@ -14,7 +14,7 @@
   z-index: 2;
 }
 .banner-label {
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 1.1px;
   font-weight: 600;
   display: inline-flex;
@@ -33,13 +33,13 @@
   color: var(--accent-soft-text);
 }
 .welcome-banner p {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--accent-soft-text);
 }
 .banner-button {
   background: var(--surface);
   color: var(--accent-soft-text);
-  font-size: 11px;
+  font-size: 13px;
   min-height: 38px;
   margin-top: 20px;
   border: 1px solid #ffffff44;
@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
   gap: 5px;
 }
@@ -121,13 +121,13 @@
 }
 .stat-value > span {
   font-family: "DM Sans";
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
   color: var(--text-muted);
 }
 .stat-card p {
-  font-size: 9px;
+  font-size: 12px;
 }
 .dashboard-grid {
   display: grid;
@@ -143,7 +143,7 @@
   color: var(--text);
 }
 .weekly-panel .section-kicker {
-  font-size: 7px;
+  font-size: 12px;
   color: var(--mint-text);
 }
 .week-days {
@@ -155,7 +155,7 @@
   text-align: center;
 }
 .week-days > div > span {
-  font-size: 10px;
+  font-size: 12px;
   display: block;
   margin-bottom: 9px;
 }
@@ -168,7 +168,7 @@
   border-radius: 10px;
   border: 1px solid #78937c44;
   color: var(--mint-text);
-  font-size: 10px;
+  font-size: 12px;
 }
 .week-day.done {
   background: var(--mint-text);
@@ -179,11 +179,11 @@
   margin-top: 8px;
 }
 .weekly-note h3 {
-  font-size: 13px;
+  font-size: 15px;
   letter-spacing: -0.3px;
 }
 .weekly-note p {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--mint-text);
   margin-top: 8px;
   line-height: 1.8;
@@ -195,7 +195,7 @@
   border-top: 1px solid #78937c44;
   padding-top: 17px;
   margin-top: 20px;
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 1px;
 }
 .activity-panel {
@@ -207,12 +207,12 @@
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 22px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-muted);
 }
 .list-toolbar input {
   max-width: 250px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .exercise-grid {
   display: grid;
@@ -231,7 +231,7 @@
 }
 .exercise-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px #32203c08;
+  box-shadow: 0 6px 20px #173e4a08;
 }
 .exercise-card-top {
   display: flex;
@@ -255,17 +255,17 @@
   color: var(--mint-text);
 }
 .category-tag {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text-muted);
   padding: 5px 8px;
   background: var(--surface-soft);
   border-radius: 6px;
 }
 .exercise-card h2 {
-  font-size: 17px;
+  font-size: 18px;
 }
 .exercise-notes {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.7;
   min-height: 38px;
   margin-top: 9px;
@@ -275,13 +275,13 @@
   display: flex;
   gap: 7px;
   align-items: center;
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 0.8px;
   color: var(--text-muted);
   margin-top: 23px;
 }
 .rep-range strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0;
   color: var(--text);
@@ -298,14 +298,14 @@
   letter-spacing: -1px;
 }
 .exercise-latest > div > span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 .exercise-latest > a {
   margin-left: auto;
 }
 .last-logged {
-  font-size: 9px;
+  font-size: 12px;
   margin: 10px 0 18px;
 }
 .readiness {
@@ -319,7 +319,7 @@
   gap: 10px;
 }
 .readiness > span {
-  font-size: 9px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -361,12 +361,12 @@
   line-height: 1.4;
 }
 .editor-note p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--peach-text);
   margin: 16px 0 35px;
 }
 .editor-note small {
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 1.2px;
 }
 .profile-grid {
@@ -397,7 +397,7 @@
   font-size: 18px;
 }
 .profile-heading p {
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 7px;
 }
 .profile-side {
@@ -411,7 +411,7 @@
   margin: 17px 0 10px;
 }
 .profile-side p {
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 24px;
 }
 .privacy-card {
@@ -459,10 +459,10 @@
 .together-banner p,
 .together-banner .section-kicker {
   color: var(--peach-text);
-  font-size: 11px;
+  font-size: 13px;
 }
 .together-banner .section-kicker {
-  font-size: 8px;
+  font-size: 12px;
 }
 .together-banner > svg {
   margin-left: auto;
@@ -485,7 +485,7 @@
   color: var(--pink-text);
 }
 .invite-disclosure {
-  font-size: 12px;
+  font-size: 14px;
   max-width: 600px;
   line-height: 1.8;
   margin-top: 20px;
@@ -498,5 +498,5 @@
   margin-top: 27px;
 }
 .shared-chart-toolbar p {
-  font-size: 10px;
+  font-size: 12px;
 }

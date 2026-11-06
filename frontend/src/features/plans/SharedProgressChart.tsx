@@ -1,3 +1,4 @@
+import { useMotionPreference } from "../../shared/hooks/useMotionPreference";
 import { useState } from "react";
 import {
   CartesianGrid,
@@ -12,6 +13,7 @@ import {
 import type { Plan } from "../../shared/api/types";
 import { EmptyState } from "../../shared/ui/Feedback";
 export function SharedProgressChart({ plan }: { plan: Plan }) {
+  const motionAllowed = useMotionPreference();
   const names = Array.from(new Set(plan.logs.map((log) => log.name || "")));
   const [name, setName] = useState("");
   const selectedName = names.includes(name) ? name : names[0];
@@ -63,18 +65,18 @@ export function SharedProgressChart({ plan }: { plan: Plan }) {
             <CartesianGrid stroke="var(--border)" vertical={false} />
             <XAxis
               dataKey="date"
-              tick={{ fill: "var(--text-muted)", fontSize: 10 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
               minTickGap={35}
             />
             <YAxis
               yAxisId="weight"
-              tick={{ fill: "var(--text-muted)", fontSize: 10 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
             />
             <YAxis
               yAxisId="reps"
               orientation="right"
               allowDecimals={false}
-              tick={{ fill: "var(--text-muted)", fontSize: 10 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
             />
             <Tooltip
               contentStyle={{
@@ -84,7 +86,7 @@ export function SharedProgressChart({ plan }: { plan: Plan }) {
                 color: "var(--text)",
               }}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
             {plan.members.flatMap((member, index) => [
               <Line
                 key={`${member.id}-weight`}
@@ -99,7 +101,9 @@ export function SharedProgressChart({ plan }: { plan: Plan }) {
                   ][index % 3]
                 }
                 connectNulls
-                isAnimationActive={false}
+                isAnimationActive={motionAllowed}
+                animationDuration={650}
+                animationEasing="ease-out"
               />,
               <Line
                 key={`${member.id}-reps`}
@@ -115,7 +119,9 @@ export function SharedProgressChart({ plan }: { plan: Plan }) {
                 }
                 strokeDasharray="4 4"
                 connectNulls
-                isAnimationActive={false}
+                isAnimationActive={motionAllowed}
+                animationDuration={650}
+                animationEasing="ease-out"
               />,
             ])}
           </LineChart>

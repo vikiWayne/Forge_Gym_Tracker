@@ -7,3 +7,14 @@
 @import "./pages.css";
 @import "./responsive.css";
 @import "./training.css";
+
+@import "./motion.css";
+@import "./invitations.css";
+@import "./onboarding.css";
+@import "./wellness.css";
+@import "./profile-layout.css";
+@import "./mobile-nav.css";
+@import "./calendar.css";
+@import "./workout-csv.css";
+
+@import "./plans-streak.css";

@@ -1,11 +1,12 @@
+import { StreakCard } from "../streak/StreakCard";
 import { useState } from "react";
-import { ArrowRight, ArrowUpRight, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useTraining } from "../../app/providers/TrainingProvider";
 import { PageHeader } from "../../shared/ui/PageHeader";
 import { EmptyState } from "../../shared/ui/Feedback";
-import { GymArt } from "../../shared/ui/GymArt";
+import { OverviewIllustration } from "./OverviewIllustration";
 import { ExerciseChart } from "../progress/ExerciseChart";
 import { WorkoutTable } from "../workouts/WorkoutTable";
 import { StatsGrid } from "./StatsGrid";
@@ -22,12 +23,6 @@ export function DashboardPage() {
         eyebrow="YOUR DAILY DOSE OF STRONG"
         title={`Hey ${user?.username}. You’ve got this.`}
         description="A fresh day. A little more possibility. Let’s make it yours."
-        action={
-          <Link className="button primary" to="/workouts/new">
-            <Plus size={17} />
-            Log workout
-          </Link>
-        }
       />
       <section className="welcome-banner">
         <div>
@@ -40,21 +35,19 @@ export function DashboardPage() {
             You’re <em>building yourself.</em>
           </h2>
           <p>Show up for your goals. We’ll keep track of the good stuff.</p>
-          <Link
-            className="button banner-button"
-            to={exercises.length ? "/workouts/new" : "/exercises"}
-          >
+          <Link className="button banner-button" to="/exercises">
             {exercises.length
-              ? "Make your next move"
+              ? "Explore your exercises"
               : "Start with an exercise"}
             <ArrowUpRight size={17} />
           </Link>
         </div>
-        <div className="banner-art">
-          <GymArt />
+        <div className="banner-art overview-illustration-art">
+          <OverviewIllustration />
         </div>
         <span className="banner-sparkle">✳</span>
       </section>
+      <StreakCard />
       <StatsGrid logs={logs} exercises={exercises} />
       <div className="dashboard-grid">
         <section className="panel">
@@ -111,12 +104,11 @@ export function DashboardPage() {
         ) : (
           <EmptyState
             title="Good things are on the way."
-            to={exercises.length ? "/workouts/new" : "/exercises"}
-            action={
-              exercises.length ? "Log a workout" : "Add your first movement"
-            }
+            to={exercises.length ? undefined : "/exercises"}
+            action={exercises.length ? undefined : "Add your first movement"}
           >
-            No workouts yet. Your first session will appear right here.
+            No workouts yet. Use the Log workout action in the header or mobile
+            navigation to start your journal.
           </EmptyState>
         )}
       </section>

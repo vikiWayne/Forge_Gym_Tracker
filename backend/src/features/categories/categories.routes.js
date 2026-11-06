@@ -46,12 +46,10 @@ export function categoryRoutes(app) {
           )
           .get(req.userId, name, req.params.id)
       )
-        return res
-          .status(409)
-          .json({
-            error:
-              "You already have a category with that name. Choose another name.",
-          });
+        return res.status(409).json({
+          error:
+            "You already have a category with that name. Choose another name.",
+        });
       db.exec("BEGIN");
       try {
         db.prepare("UPDATE categories SET name=? WHERE id=? AND user_id=?").run(
@@ -99,12 +97,10 @@ export function categoryRoutes(app) {
           .status(400)
           .json({ error: "Choose another category from your own library." });
       if (count && !target)
-        return res
-          .status(409)
-          .json({
-            error:
-              "Move the exercises to another category before deleting this category.",
-          });
+        return res.status(409).json({
+          error:
+            "Move the exercises to another category before deleting this category.",
+        });
       db.exec("BEGIN");
       try {
         if (target)

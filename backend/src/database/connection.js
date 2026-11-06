@@ -1,12 +1,15 @@
 import { migrateTraining } from "./trainingMigration.js";
 import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
-mkdirSync(new URL("../../data/", import.meta.url), { recursive: true });
-export const db = new DatabaseSync(
+const databasePath =
   process.env.DB_PATH ||
-    fileURLToPath(new URL("../../data/forge.sqlite", import.meta.url)),
-);
+  fileURLToPath(new URL("../../data/forge.sqlite", import.meta.url));
+if (databasePath !== ":memory:") {
+  mkdirSync(dirname(databasePath), { recursive: true });
+}
+export const db = new DatabaseSync(databasePath);
 db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,username TEXT UNIQUE COLLATE NOCASE,password TEXT,age INTEGER,weight REAL,sex TEXT);
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT REFERENCES users(id),expires INTEGER);
@@ -27,3 +30,14 @@ if (!columns.some((c) => c.name === "rep_min")) {
 }
 
 migrateTraining(db);
+
+// Short-lived setup records hold only a password hash until profile setup finishes.
+db.exec(
+  `CREATE TABLE IF NOT EXISTS onboarding_drafts(token TEXT PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,expires INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS onboarding_expiry ON onboarding_drafts(expires);`,
+);
+
+db.exec(`CREATE TABLE IF NOT EXISTS protein_entries(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),value REAL NOT NULL,date TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS weight_entries(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),value REAL NOT NULL,date TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS protein_user_date ON protein_entries(user_id,date);
+CREATE INDEX IF NOT EXISTS weight_user_date ON weight_entries(user_id,date);
+CREATE TABLE IF NOT EXISTS account_security(user_id TEXT PRIMARY KEY REFERENCES users(id),recovery_hash TEXT);`);

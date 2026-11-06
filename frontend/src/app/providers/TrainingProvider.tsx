@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -17,7 +18,9 @@ type TrainingData = {
 type TrainingState = TrainingData & {
   loading: boolean;
   error: string;
+  invitationError: string;
   refresh: () => Promise<void>;
+  refreshInvitations: () => Promise<void>;
 };
 const TrainingContext = createContext<TrainingState | null>(null);
 export function TrainingProvider({ children }: { children: ReactNode }) {
@@ -29,21 +32,69 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const refresh = useCallback(async () => {
-    const [training, plans] = await Promise.all([
-      api<Omit<TrainingData, "plans">>("/data"),
-      api<Plan[]>("/plans"),
-    ]);
-    setData({ ...training, plans });
-    setError("");
+  const [invitationError, setInvitationError] = useState("");
+  const version = useRef(0);
+  const refreshInvitations = useCallback(async () => {
+    const request = ++version.current;
+    try {
+      const plans = await api<Plan[]>("/plans");
+      if (request === version.current) {
+        setData((previous) => ({ ...previous, plans }));
+        setInvitationError("");
+      }
+    } catch (cause) {
+      if (request === version.current)
+        setInvitationError(
+          "Invitations could not be refreshed. Please try again.",
+        );
+      throw cause;
+    }
   }, []);
+  const refresh = useCallback(async () => {
+    const [training] = await Promise.all([
+      api<Omit<TrainingData, "plans">>("/data"),
+      refreshInvitations(),
+    ]);
+    setData((previous) => ({ ...previous, ...training }));
+    setError("");
+  }, [refreshInvitations]);
   useEffect(() => {
     refresh()
       .catch((cause) => setError(cause.message))
       .finally(() => setLoading(false));
   }, [refresh]);
+  useEffect(() => {
+    let checking = false;
+    const check = () => {
+      if (document.visibilityState !== "visible" || checking) return;
+      checking = true;
+      void refreshInvitations()
+        .catch(() => {})
+        .finally(() => {
+          checking = false;
+        });
+    };
+    const interval = window.setInterval(check, 30000);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+      version.current++;
+    };
+  }, [refreshInvitations]);
   return (
-    <TrainingContext.Provider value={{ ...data, loading, error, refresh }}>
+    <TrainingContext.Provider
+      value={{
+        ...data,
+        loading,
+        error,
+        invitationError,
+        refresh,
+        refreshInvitations,
+      }}
+    >
       {children}
     </TrainingContext.Provider>
   );

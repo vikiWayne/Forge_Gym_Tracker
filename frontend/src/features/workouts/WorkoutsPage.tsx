@@ -1,6 +1,5 @@
+import { WorkoutCsvActions } from "./WorkoutCsvActions";
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useTraining } from "../../app/providers/TrainingProvider";
 import { api } from "../../shared/api/client";
 import type { Log } from "../../shared/api/types";
@@ -25,13 +24,8 @@ export function WorkoutsPage() {
         eyebrow="YOUR EFFORT, ON THE RECORD"
         title="Look at you, showing up."
         description="Every lift has a story. Keep yours here."
-        action={
-          <Link className="button primary" to="/workouts/new">
-            <Plus size={17} />
-            Log workout
-          </Link>
-        }
       />
+      <WorkoutCsvActions />
       {logs.length ? (
         <section className="panel">
           <div className="section-head">
@@ -64,14 +58,12 @@ export function WorkoutsPage() {
       ) : (
         <EmptyState
           title="Your next chapter starts with a rep."
-          to={exercises.length ? "/workouts/new" : "/exercises"}
-          action={
-            exercises.length
-              ? "Log your first workout"
-              : "Add your first exercise"
-          }
+          to={exercises.length ? undefined : "/exercises"}
+          action={exercises.length ? undefined : "Add your first exercise"}
         >
-          Your real workout history will appear here once you start logging.
+          {exercises.length
+            ? "Use Log workout in the navigation to record your first session. Your real history will appear here."
+            : "Add an exercise, then use Log workout in the navigation to record your first session."}
         </EmptyState>
       )}
       {deleting && (

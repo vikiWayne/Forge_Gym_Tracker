@@ -15,10 +15,22 @@ async function request(path, method = "GET", data, cookie) {
     },
     body: data ? JSON.stringify(data) : undefined,
   });
+  const cookies = response.headers.getSetCookie();
+  const cookieValues = new Map(
+    cookies.map((cookie) => {
+      const pair = cookie.split(";")[0];
+      const split = pair.indexOf("=");
+      return [pair.slice(0, split), pair.slice(split + 1)];
+    }),
+  );
   return {
     status: response.status,
     data: await response.json(),
-    cookie: response.headers.get("set-cookie")?.split(";")[0],
+    cookie: Array.from(
+      cookieValues,
+      ([name, value]) => `${name}=${value}`,
+    ).join("; "),
+    cookies,
   };
 }
 test("account isolation, CRUD, consent and logout", async () => {
@@ -259,7 +271,37 @@ test("account isolation, CRUD, consent and logout", async () => {
     (await request("/plans", "GET", undefined, b.cookie)).data[0].logs.length,
     0,
   );
+  assert.equal(
+    (
+      await request(
+        `/plans/${plan.data.id}/invite`,
+        "POST",
+        { username: "bob" },
+        a.cookie,
+      )
+    ).status,
+    409,
+  );
+  const incoming = (await request("/plans", "GET", undefined, b.cookie))
+    .data[0];
+  assert.equal(incoming.owner_name, "alice");
+  assert.equal(incoming.accepted, 0);
+  assert.deepEqual(incoming.pending_invites, []);
+  assert.equal(
+    (await request("/plans", "GET", undefined, a.cookie)).data[0]
+      .pending_invites[0].username,
+    "bob",
+  );
   await request(`/plans/${plan.data.id}/accept`, "POST", {}, b.cookie);
+  assert.deepEqual(
+    (await request("/plans", "GET", undefined, a.cookie)).data[0]
+      .pending_invites,
+    [],
+  );
+  assert.equal(
+    (await request("/plans", "GET", undefined, b.cookie)).data[0].accepted,
+    1,
+  );
   assert.deepEqual(
     (await request("/plans", "GET", undefined, b.cookie)).data[0].logs[0].sets,
     [
@@ -294,5 +336,188 @@ test("account isolation, CRUD, consent and logout", async () => {
   assert.equal(
     (await request("/data", "GET", undefined, a.cookie)).status,
     401,
+  );
+});
+
+test("one-door authentication, onboarding, and username availability", async () => {
+  const { db } = await import("../src/database/connection.js");
+  assert.equal(
+    (await request("/auth/username-availability?username=fresh_lifter")).data
+      .available,
+    true,
+  );
+  const start = await request("/auth/continue", "POST", {
+    username: "fresh_lifter",
+    password: "new-password-123",
+  });
+  assert.equal(start.status, 200);
+  assert.equal(start.data.status, "onboarding");
+  assert.match(start.cookie, /onboarding=.+/);
+  assert.equal(
+    db.prepare("SELECT id FROM users WHERE username=?").get("fresh_lifter"),
+    undefined,
+  );
+  assert.equal(
+    (await request("/me", "GET", undefined, start.cookie)).status,
+    401,
+  );
+  assert.equal(
+    (await request("/auth/onboarding", "GET", undefined, start.cookie)).data
+      .username,
+    "fresh_lifter",
+  );
+  assert.equal(
+    (
+      await request(
+        "/auth/onboarding",
+        "POST",
+        { age: 0, weight: 70, sex: "Male" },
+        start.cookie,
+      )
+    ).status,
+    400,
+  );
+  const finish = await request(
+    "/auth/onboarding",
+    "POST",
+    { age: 28, weight: 70, sex: "Prefer not to say" },
+    start.cookie,
+  );
+  assert.equal(finish.status, 201);
+  assert.equal(finish.data.age, 28);
+  assert.match(finish.cookie, /session=.+/);
+  const accountId = finish.data.id;
+  assert.equal(
+    (await request("/me", "GET", undefined, finish.cookie)).data.id,
+    accountId,
+  );
+  assert.equal(
+    (await request("/auth/username-availability?username=FRESH_LIFTER")).data
+      .available,
+    false,
+  );
+  assert.equal(
+    (
+      await request("/auth/continue", "POST", {
+        username: "fresh_lifter",
+        password: "incorrect-password",
+      })
+    ).status,
+    401,
+  );
+  const login = await request("/auth/continue", "POST", {
+    username: "fresh_lifter",
+    password: "new-password-123",
+  });
+  assert.equal(login.data.status, "authenticated");
+  assert.equal(login.data.user.id, accountId);
+  assert.equal(
+    (
+      await request(
+        "/me/username-availability?username=FRESH_LIFTER",
+        "GET",
+        undefined,
+        login.cookie,
+      )
+    ).data.available,
+    true,
+  );
+  assert.equal(
+    (
+      await request(
+        "/me/username-availability?username=alice",
+        "GET",
+        undefined,
+        login.cookie,
+      )
+    ).data.available,
+    false,
+  );
+  assert.equal(
+    (await request("/me/username", "PUT", { username: "alice" }, login.cookie))
+      .status,
+    409,
+  );
+  const rename = await request(
+    "/me/username",
+    "PUT",
+    { username: "renamed_lifter" },
+    login.cookie,
+  );
+  assert.equal(rename.status, 200);
+  assert.equal(rename.data.id, accountId);
+  assert.equal(rename.data.username, "renamed_lifter");
+  assert.equal(
+    (await request("/auth/username-availability?username=fresh_lifter")).data
+      .available,
+    true,
+  );
+  assert.equal(
+    (
+      await request("/auth/continue", "POST", {
+        username: "renamed_lifter",
+        password: "new-password-123",
+      })
+    ).data.user.id,
+    accountId,
+  );
+  const abandoned = await request("/auth/continue", "POST", {
+    username: "abandoned_lifter",
+    password: "new-password-123",
+  });
+  await request("/auth/onboarding", "DELETE", {}, abandoned.cookie);
+  assert.equal(
+    (await request("/auth/onboarding", "GET", undefined, abandoned.cookie)).data
+      .username,
+    null,
+  );
+  assert.equal(
+    (
+      await request(
+        "/auth/onboarding",
+        "POST",
+        { age: 28, weight: 70, sex: "Male" },
+        abandoned.cookie,
+      )
+    ).status,
+    410,
+  );
+  const first = await request("/auth/continue", "POST", {
+    username: "racing_lifter",
+    password: "first-password",
+  });
+  const second = await request("/auth/continue", "POST", {
+    username: "racing_lifter",
+    password: "second-password",
+  });
+  assert.equal(
+    (
+      await request(
+        "/auth/onboarding",
+        "POST",
+        { age: 25, weight: 65, sex: "Female" },
+        first.cookie,
+      )
+    ).status,
+    201,
+  );
+  assert.equal(
+    (
+      await request(
+        "/auth/onboarding",
+        "POST",
+        { age: 25, weight: 65, sex: "Female" },
+        second.cookie,
+      )
+    ).status,
+    409,
+  );
+  assert.equal(
+    db
+      .prepare(
+        "SELECT COUNT(*) AS count FROM onboarding_drafts WHERE username=?",
+      )
+      .get("fresh_lifter").count,
+    0,
   );
 });

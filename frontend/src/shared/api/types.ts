@@ -33,6 +33,8 @@ export type Plan = {
   id: string;
   name: string;
   owner_id: string;
+  owner_name: string;
+  pending_invites: { id: string; username: string }[];
   accepted: number;
   members: { id: string; username: string }[];
   logs: Log[];

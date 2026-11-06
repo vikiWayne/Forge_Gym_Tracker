@@ -1,5 +1,7 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useModalFocus } from "../hooks/useModalFocus";
 export function Modal({
   title,
   close,
@@ -10,50 +12,27 @@ export function Modal({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const prior = document.activeElement as HTMLElement;
-    ref.current?.querySelector<HTMLElement>("input,button,select")?.focus();
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "Tab") {
-        const els = ref.current?.querySelectorAll<HTMLElement>(
-          "button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]",
-        );
-        if (!els?.length) return;
-        const first = els[0],
-          last = els[els.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", key);
-    return () => {
-      document.removeEventListener("keydown", key);
-      prior?.focus();
-    };
-  }, []);
-  return (
+  const titleId = useId();
+  useModalFocus(ref, close);
+  return createPortal(
     <div
       className="overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) close();
+      onClick={(event) => {
+        if (event.target === event.currentTarget) close();
       }}
     >
       <div
         className="modal"
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={titleId}
+        tabIndex={-1}
         ref={ref}
       >
         <div className="section-head">
-          <h2>{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button
+            type="button"
             className="icon-button"
             aria-label="Close dialog"
             onClick={close}
@@ -63,6 +42,7 @@ export function Modal({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

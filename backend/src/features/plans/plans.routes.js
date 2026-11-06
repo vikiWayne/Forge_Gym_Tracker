@@ -20,7 +20,7 @@ export function planRoutes(app) {
     "/api/plans/:id/invite",
     handler((req, res) => {
       const { username } = z
-        .object({ username: z.string().min(1) })
+        .object({ username: z.string().trim().min(1).max(30) })
         .parse(req.body);
       if (
         !db
@@ -37,6 +37,15 @@ export function planRoutes(app) {
         return res
           .status(404)
           .json({ error: "No account found with that username." });
+      const membership = db
+        .prepare("SELECT accepted FROM members WHERE plan_id=? AND user_id=?")
+        .get(req.params.id, u.id);
+      if (membership)
+        return res.status(409).json({
+          error: membership.accepted
+            ? "That partner is already a member of this plan."
+            : "An invitation is already pending for that partner.",
+        });
       db.prepare("INSERT OR IGNORE INTO members VALUES(?,?,0)").run(
         req.params.id,
         u.id,
@@ -60,12 +69,20 @@ export function planRoutes(app) {
   app.get("/api/plans", (req, res) => {
     const plans = db
       .prepare(
-        "SELECT p.*,m.accepted FROM plans p JOIN members m ON m.plan_id=p.id WHERE m.user_id=?",
+        "SELECT p.*,m.accepted,u.username AS owner_name FROM plans p JOIN members m ON m.plan_id=p.id JOIN users u ON u.id=p.owner_id WHERE m.user_id=?",
       )
       .all(req.userId);
     res.json(
       plans.map((p) => ({
         ...p,
+        pending_invites:
+          p.owner_id === req.userId && p.accepted
+            ? db
+                .prepare(
+                  "SELECT u.id,u.username FROM users u JOIN members m ON m.user_id=u.id WHERE m.plan_id=? AND m.accepted=0 ORDER BY u.username",
+                )
+                .all(p.id)
+            : [],
         members: p.accepted
           ? db
               .prepare(

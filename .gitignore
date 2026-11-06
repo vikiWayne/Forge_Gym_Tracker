@@ -5,3 +5,10 @@ backend/data/*
 .env
 
 *.tsbuildinfo
+
+.env.*
+!.env.example
+coverage/
+*.log
+.DS_Store
+Thumbs.db

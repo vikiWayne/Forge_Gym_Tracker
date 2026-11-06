@@ -1,3 +1,4 @@
+import { InvitationStatus } from "./InvitationStatus";
 import { SetSummary } from "../workouts/SetSummary";
 import { useState } from "react";
 import { Plus, Users } from "lucide-react";
@@ -18,7 +19,11 @@ export function PlanCard({ plan }: { plan: Plan }) {
   const [dialog, setDialog] = useState<"invite" | "leave" | null>(null);
   const [notice, setNotice] = useState("");
   return (
-    <section className="panel plan-card">
+    <section
+      className={`panel plan-card ${!plan.accepted ? "pending-plan-card" : ""}`}
+      id={`plan-${plan.id}`}
+      tabIndex={-1}
+    >
       <div className="section-head">
         <div className="plan-title">
           <span className="plan-icon">
@@ -82,6 +87,7 @@ export function PlanCard({ plan }: { plan: Plan }) {
           )}
         </div>
       </div>
+      <InvitationStatus plan={plan} />
       <ErrorMessage message={error} />
       {notice && (
         <p className="success-message" role="status">

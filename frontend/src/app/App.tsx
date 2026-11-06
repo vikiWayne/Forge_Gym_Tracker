@@ -1,3 +1,7 @@
+import { RouteScrollReset } from "./layout/RouteScrollReset";
+import { ForgotPasswordPage } from "../features/security/ForgotPasswordPage";
+import { ActionFeedback } from "../shared/ui/ActionFeedback";
+import { InteractionEffects } from "../shared/ui/InteractionEffects";
 import { lazy, Suspense } from "react";
 import {
   BrowserRouter,
@@ -12,6 +16,21 @@ import { ThemeProvider } from "./providers/ThemeProvider";
 import { TrainingProvider } from "./providers/TrainingProvider";
 import { AppLayout } from "./layout/AppLayout";
 import { LoginPage } from "../features/auth/LoginPage";
+const CalendarPage = lazy(() =>
+  import("../features/calendar/CalendarPage").then((module) => ({
+    default: module.CalendarPage,
+  })),
+);
+const ProteinPage = lazy(() =>
+  import("../features/protein/ProteinPage").then((module) => ({
+    default: module.ProteinPage,
+  })),
+);
+const BodyWeightPage = lazy(() =>
+  import("../features/bodyWeight/BodyWeightPage").then((module) => ({
+    default: module.BodyWeightPage,
+  })),
+);
 const DashboardPage = lazy(() =>
   import("../features/dashboard/DashboardPage").then((module) => ({
     default: module.DashboardPage,
@@ -35,6 +54,11 @@ const WorkoutEditorPage = lazy(() =>
 const ProgressPage = lazy(() =>
   import("../features/progress/ProgressPage").then((module) => ({
     default: module.ProgressPage,
+  })),
+);
+const PlanDetailsPage = lazy(() =>
+  import("../features/plans/PlanDetailsPage").then((module) => ({
+    default: module.PlanDetailsPage,
   })),
 );
 const PlansPage = lazy(() =>
@@ -77,6 +101,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route element={<ProtectedRoutes />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
@@ -84,8 +109,12 @@ function AppRoutes() {
           <Route path="/workouts" element={<WorkoutsPage />} />
           <Route path="/workouts/new" element={<WorkoutEditorPage />} />
           <Route path="/workouts/:id/edit" element={<WorkoutEditorPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/protein" element={<ProteinPage />} />
+          <Route path="/body-weight" element={<BodyWeightPage />} />
           <Route path="/progress" element={<ProgressPage />} />
           <Route path="/together" element={<PlansPage />} />
+          <Route path="/together/:id" element={<PlanDetailsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
@@ -97,8 +126,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
+        <RouteScrollReset />
         <AuthProvider>
           <AppRoutes />
+          <ActionFeedback />
+          <InteractionEffects />
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

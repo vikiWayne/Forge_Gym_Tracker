@@ -41,13 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("session-expired", expire);
     return () => window.removeEventListener("session-expired", expire);
   }, []);
+  function authenticate(nextUser: User) {
+    setError("");
+    setUser(nextUser);
+    setLoading(false);
+  }
   async function logout() {
     await api("/auth/logout", "POST");
     setUser(null);
   }
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, authenticate: setUser, logout, refresh }}
+      value={{ user, loading, error, authenticate, logout, refresh }}
     >
       {children}
     </AuthContext.Provider>

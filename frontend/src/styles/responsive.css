@@ -79,11 +79,11 @@
     margin-top: 40px;
   }
   .story-label {
-    font-size: 7px;
+    font-size: 12px;
     letter-spacing: 1px;
   }
   .story-bottom {
-    font-size: 6px;
+    font-size: 12px;
   }
   .page-header h1 {
     font-size: 27px;
@@ -172,7 +172,7 @@
     letter-spacing: -1.5px;
   }
   .story-label {
-    font-size: 6px;
+    font-size: 12px;
     letter-spacing: 0.7px;
   }
   .story-arrow {
@@ -180,7 +180,7 @@
     height: 33px;
   }
   .auth-story > p {
-    font-size: 12px;
+    font-size: 14px;
   }
   .auth-illustration {
     min-height: 220px;
@@ -200,7 +200,7 @@
   }
   .floating-label {
     left: -8px;
-    font-size: 8px;
+    font-size: 12px;
     padding: 9px;
   }
   .story-bottom {
@@ -211,7 +211,7 @@
     font-size: 28px;
   }
   .auth-form-heading > .section-kicker {
-    font-size: 7px;
+    font-size: 12px;
   }
   .auth-form-panel {
     max-width: 330px;
@@ -252,7 +252,7 @@
     font-size: 32px;
   }
   .auth-form-heading > .section-kicker {
-    font-size: 8px;
+    font-size: 12px;
   }
   .auth-story {
     min-height: 300px;
@@ -265,7 +265,7 @@
   }
   .auth-story > p {
     max-width: 200px;
-    font-size: 11px;
+    font-size: 13px;
     position: relative;
     z-index: 2;
   }
@@ -298,7 +298,7 @@
     max-width: 100%;
   }
   .story-label {
-    font-size: 6px;
+    font-size: 12px;
   }
   .story-arrow {
     height: 30px;
@@ -307,17 +307,17 @@
   .story-bottom {
     margin-top: auto;
     padding-top: 15px;
-    font-size: 6px;
+    font-size: 12px;
     max-width: 55%;
     border: 0;
     gap: 5px;
   }
   .auth-footer {
-    font-size: 8px;
+    font-size: 12px;
     padding: 12px 0 22px;
   }
   .auth-footer > span:first-child {
-    font-size: 6px;
+    font-size: 12px;
     letter-spacing: 1px;
   }
   .auth-form-panel .form-row {
@@ -355,7 +355,7 @@
   }
   .sidebar nav .nav-link > span {
     display: block;
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 500;
   }
   .workspace {
@@ -369,7 +369,7 @@
     gap: 12px;
   }
   .breadcrumb {
-    font-size: 10px;
+    font-size: 12px;
     gap: 10px;
   }
   .header-actions {
@@ -384,7 +384,7 @@
   .account-avatar {
     height: 30px;
     width: 30px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .theme-toggle {
     min-height: 33px;
@@ -402,12 +402,12 @@
     letter-spacing: -1.1px;
   }
   .eyebrow {
-    font-size: 7px;
+    font-size: 12px;
     letter-spacing: 1.3px;
     margin-bottom: 9px;
   }
   .page-description {
-    font-size: 11px;
+    font-size: 13px;
     margin-top: 10px;
     max-width: 290px;
   }
@@ -427,13 +427,13 @@
   .page-header > .inline-label {
     flex-direction: column;
     align-items: flex-start;
-    font-size: 9px;
+    font-size: 12px;
     gap: 7px;
     margin-top: 3px;
   }
   .page-header > .inline-label select {
     max-width: 105px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .welcome-banner {
     min-height: 256px;
@@ -441,7 +441,7 @@
     border-radius: 17px;
   }
   .banner-label {
-    font-size: 6px;
+    font-size: 12px;
     letter-spacing: 1px;
   }
   .welcome-banner h2 {
@@ -451,12 +451,12 @@
     margin-top: 20px;
   }
   .welcome-banner p {
-    font-size: 10px;
+    font-size: 12px;
     max-width: 220px;
     line-height: 1.8;
   }
   .banner-button {
-    font-size: 10px;
+    font-size: 12px;
     margin-top: 19px;
   }
   .banner-art {
@@ -481,7 +481,7 @@
     border-radius: 14px;
   }
   .stat-top {
-    font-size: 9px;
+    font-size: 12px;
     gap: 5px;
   }
   .stat-icon {
@@ -497,21 +497,21 @@
     gap: 6px;
   }
   .stat-value > span {
-    font-size: 9px;
+    font-size: 12px;
   }
   .stat-card p {
-    font-size: 8px;
+    font-size: 12px;
   }
   .panel {
     padding: 18px;
     border-radius: 15px;
   }
   .section-head h2 {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.4;
   }
   .section-kicker {
-    font-size: 6px;
+    font-size: 12px;
     letter-spacing: 1px;
   }
   .section-head {
@@ -519,15 +519,15 @@
   }
   .section-head select {
     max-width: 45%;
-    font-size: 9px;
+    font-size: 12px;
     padding: 8px 23px 8px 8px;
   }
   .section-head input {
     max-width: 42%;
-    font-size: 10px;
+    font-size: 12px;
   }
   .section-head .text-link {
-    font-size: 9px;
+    font-size: 12px;
     gap: 5px;
     white-space: nowrap;
   }
@@ -537,7 +537,7 @@
   }
   .chart-legend {
     margin-top: 21px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .activity-panel {
     margin-top: 18px;
@@ -547,30 +547,30 @@
     min-height: 240px;
   }
   .empty-state h2 {
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.6;
   }
   .empty-state p {
-    font-size: 11px;
+    font-size: 13px;
   }
   .empty-state .button {
-    font-size: 11px;
+    font-size: 13px;
   }
   .workspace-footer {
     padding: 23px 18px;
-    font-size: 8px;
+    font-size: 12px;
   }
   .workspace-footer > span:first-child {
-    font-size: 6px;
+    font-size: 12px;
     letter-spacing: 1px;
   }
   .list-toolbar {
-    font-size: 10px;
+    font-size: 12px;
     gap: 12px;
   }
   .list-toolbar input {
     max-width: 48%;
-    font-size: 10px;
+    font-size: 12px;
     min-height: 38px;
   }
   .exercise-grid {
@@ -587,20 +587,20 @@
     padding: 15px 20px;
   }
   .readiness > span {
-    font-size: 11px;
+    font-size: 13px;
   }
   .table-scroll {
     margin-top: 18px;
   }
   td {
-    font-size: 10px;
+    font-size: 12px;
     padding: 14px 9px;
   }
   .table-movement-icon {
     display: none;
   }
   th {
-    font-size: 8px;
+    font-size: 12px;
   }
   .notes-cell {
     max-width: 160px;
@@ -626,7 +626,7 @@
     gap: 8px;
   }
   .form-actions .button {
-    font-size: 11px;
+    font-size: 13px;
   }
   .profile-side {
     display: flex;
@@ -663,14 +663,14 @@
     max-width: 260px;
   }
   .together-banner p {
-    font-size: 10px;
+    font-size: 12px;
     max-width: 220px;
   }
   .together-banner > .lucide {
     display: none;
   }
   .together-banner .section-kicker {
-    font-size: 7px;
+    font-size: 12px;
   }
   .plan-card .section-head {
     flex-direction: column;
@@ -681,7 +681,7 @@
     flex-wrap: wrap;
   }
   .plan-card .button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 10px 13px;
     min-height: 38px;
   }
@@ -691,16 +691,16 @@
     gap: 12px;
   }
   .shared-chart-toolbar .inline-label {
-    font-size: 10px;
+    font-size: 12px;
   }
   .shared-chart-toolbar select {
-    font-size: 10px;
+    font-size: 12px;
   }
   .shared-chart-toolbar p {
-    font-size: 9px;
+    font-size: 12px;
   }
   .invite-disclosure {
-    font-size: 11px;
+    font-size: 13px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
