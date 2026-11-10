@@ -1,0 +1,60 @@
+.nutrition-target {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 1fr);
+  gap: 30px;
+  margin: 24px 0;
+  align-items: start;
+}
+.nutrition-target-progress h2 {
+  margin: 7px 0 15px;
+}
+.nutrition-target-total {
+  margin: 8px 0 15px;
+}
+.nutrition-target-total strong {
+  font-family: Manrope, sans-serif;
+  font-size: 29px;
+  color: var(--text);
+}
+.nutrition-target-total span {
+  font-size: 14px;
+}
+.nutrition-target progress {
+  width: 100%;
+  height: 13px;
+  accent-color: var(--primary);
+  margin: 0 0 12px;
+}
+.nutrition-target .field-hint {
+  margin-top: 16px;
+  font-size: 12px;
+}
+.nutrition-target-settings label {
+  margin-top: 0;
+}
+.nutrition-target-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.nutrition-target-settings {
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .nutrition-target {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}
+@media (max-width: 650px) {
+  .nutrition-target {
+    margin: 18px 0;
+    gap: 22px;
+  }
+  .nutrition-target-total strong {
+    font-size: 25px;
+  }
+  .nutrition-target-actions .button {
+    flex: 1 1 auto;
+  }
+}

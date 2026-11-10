@@ -27,8 +27,8 @@ export function ExercisesPage() {
     <>
       <PageHeader
         eyebrow="YOUR MOVEMENT LIBRARY"
-        title="Find your kind of strong."
-        description="Build your split. Give every movement a place to belong."
+        title="Your exercise library."
+        description="Build your collection. Keep your next movement close."
         action={
           <div className="page-actions">
             <button

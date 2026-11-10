@@ -1,5 +1,6 @@
 import { InvitationStatus } from "./InvitationStatus";
 import { SetSummary } from "../workouts/SetSummary";
+import { WorkoutMobileCards } from "../workouts/WorkoutMobileCards";
 import { useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { useAuth } from "../../app/providers/AuthProvider";
@@ -12,6 +13,8 @@ import { Modal } from "../../shared/ui/Modal";
 import { formatDate } from "../../shared/lib/dates";
 import { PlanForm } from "./PlanForm";
 import { SharedProgressChart } from "./SharedProgressChart";
+import { SharedRoutines } from "./SharedRoutines";
+import { SharingSettings } from "./SharingSettings";
 export function PlanCard({ plan }: { plan: Plan }) {
   const { user } = useAuth();
   const { refresh } = useTraining();
@@ -81,7 +84,7 @@ export function PlanCard({ plan }: { plan: Plan }) {
                   })
                 }
               >
-                Accept & share logs
+                Accept invitation
               </button>
             </>
           )}
@@ -96,9 +99,12 @@ export function PlanCard({ plan }: { plan: Plan }) {
       )}
       {plan.accepted ? (
         <>
+          <SharingSettings key={plan.id} plan={plan} />
           <SharedProgressChart plan={plan} />
+          <SharedRoutines plan={plan} />
+          <WorkoutMobileCards logs={plan.logs} exercises={[]} />
           {plan.logs.length > 0 && (
-            <div className="table-scroll">
+            <div className="table-scroll shared-workout-desktop">
               <table>
                 <caption className="sr-only">Shared workout logs</caption>
                 <thead>
@@ -129,8 +135,9 @@ export function PlanCard({ plan }: { plan: Plan }) {
         </>
       ) : (
         <p className="invite-disclosure">
-          Accepting shares your historical and future workout logs with accepted
-          members of this plan. Leave anytime to stop sharing.
+          Accepting joins this plan. Your workouts stay private until you choose
+          sharing preferences. Share selected workouts or all workouts, and
+          decide whether to include notes. Leave anytime to stop access.
         </p>
       )}
       {dialog && (

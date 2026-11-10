@@ -1,0 +1,75 @@
+.sharing-settings {
+  margin: 24px 0;
+  padding: 18px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.sharing-settings > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.sharing-settings > summary > span {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-weight: 500;
+}
+.sharing-settings form {
+  margin-top: 18px;
+}
+.sharing-settings form > p {
+  font-size: 13px;
+}
+.sharing-settings .sharing-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 11px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.sharing-checkbox input {
+  width: 21px;
+  height: 21px;
+  min-height: 21px;
+  accent-color: var(--primary);
+  flex: 0 0 auto;
+}
+.sharing-checkbox span {
+  min-width: 0;
+}
+.sharing-checkbox small {
+  display: block;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.sharing-log-list {
+  max-height: 290px;
+  overflow-y: auto;
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.sharing-log-list legend {
+  font-size: 13px;
+  padding: 0 6px;
+}
+.sharing-settings .field-hint {
+  margin: 15px 0;
+}
+@media (max-width: 650px) {
+  .sharing-settings {
+    padding: 14px;
+  }
+  .sharing-settings > summary > span {
+    margin-left: 0;
+    width: 100%;
+  }
+}

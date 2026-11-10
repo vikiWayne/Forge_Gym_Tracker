@@ -7,6 +7,11 @@ await new Promise((r) => server.once("listening", r));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api`;
 async function request(path, method = "GET", data, cookie) {
+  if (path.startsWith("/auth/") && data?.username && !data.email)
+    data = {
+      ...data,
+      email: `${data.username.toLowerCase() === "renamed_lifter" ? "fresh_lifter" : data.username.toLowerCase()}@example.com`,
+    };
   const response = await fetch(base + path, {
     method,
     headers: {
@@ -79,7 +84,7 @@ test("account isolation, CRUD, consent and logout", async () => {
     sex: "Female",
   });
   assert.equal(duplicate.status, 409);
-  assert.match(duplicate.data.error, /Choose another username, or sign in/);
+  assert.match(duplicate.data.error, /Sign in with its password/);
   assert.deepEqual((await request("/data", "GET", undefined, a.cookie)).data, {
     categories: [],
     exercises: [],
@@ -259,6 +264,17 @@ test("account isolation, CRUD, consent and logout", async () => {
   assert.equal(
     (
       await request(
+        `/plans/${plan.data.id}/sharing`,
+        "PUT",
+        { mode: "all", include_notes: true, selected_log_ids: [] },
+        a.cookie,
+      )
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await request(
         `/plans/${plan.data.id}/invite`,
         "POST",
         { username: "bob" },
@@ -363,8 +379,8 @@ test("one-door authentication, onboarding, and username availability", async () 
   );
   assert.equal(
     (await request("/auth/onboarding", "GET", undefined, start.cookie)).data
-      .username,
-    "fresh_lifter",
+      .email,
+    "fresh_lifter@example.com",
   );
   assert.equal(
     (
@@ -468,7 +484,7 @@ test("one-door authentication, onboarding, and username availability", async () 
   await request("/auth/onboarding", "DELETE", {}, abandoned.cookie);
   assert.equal(
     (await request("/auth/onboarding", "GET", undefined, abandoned.cookie)).data
-      .username,
+      .email,
     null,
   );
   assert.equal(

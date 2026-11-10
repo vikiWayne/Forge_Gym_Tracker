@@ -1,6 +1,14 @@
 # FORGE gym tracker
 
-React + TypeScript frontend and Express API with persistent SQLite storage. Users see only the login screen until authenticated. All training pages are protected and display only saved account data. The app never automatically seeds accounts or logs. Explicitly requested demonstration accounts exist only in the local database, which is excluded from release artifacts.
+## Routines, active workouts and records
+
+Open **Routines** (mobile **Train**) to create, edit, reorder or delete reusable sessions. Each routine contains up to 20 movements from your exercise library and 1–50 target sets per movement. Deleting a library exercise requires replacing it in routines before starting them again.
+
+Start a routine to open workout mode. Adjust actual weights/reps, check completed sets, and follow the rest timer (30 seconds–5 minutes). Checking a set starts the timer; restart or skip rest anytime. Elapsed session time includes time away from the page. Changes autosave to your account; **Save & leave** waits for saving, and **Resume workout** restores the active session, including its timer. One active workout is allowed per account. Finish saves only checked sets to the journal, using the session's start date in India time; repeated finish requests do not duplicate logs. Discarding saves no journal entries. Recent completed sessions show their duration in Routines.
+
+Manual workout entry and workout mode both display the latest saved session for the selected exercise (excluding the log being edited and dates after the selected date). **Progress** shows all-time heaviest weight, maximum reps, estimated one-rep max, best volume per exercise log, and weight records by rep count. The Epley estimate uses sets of 1–10 reps; records recalculate from saved sets after edits and deletions, independently of chart time filters.
+
+React + TypeScript frontend and Express API with persistent SQLite storage. Users sign in with email and a password. Training pages are protected and display saved account data. Public handles are used for Together; sign-in emails stay private. The app never automatically seeds accounts or logs, and local databases are excluded from release artifacts.
 
 ## Run locally
 
@@ -17,7 +25,7 @@ Open http://localhost:5173. The frontend proxies `/api` to port 3001. Stop both 
 
 | URL                  | Access        | Purpose                                                                                      |
 | -------------------- | ------------- | -------------------------------------------------------------------------------------------- |
-| `/login`             | Public        | One username/password action; new users complete illustrated profile setup                   |
+| `/login`             | Public        | Email/password sign-in; new users complete illustrated profile setup                        |
 | `/dashboard`         | Authenticated | Account statistics, weekly activity and recent workouts                                      |
 | `/exercises`         | Authenticated | User-created training categories, exercise library, notes, rep ranges and readiness switches |
 | `/workouts`          | Authenticated | Search, edit and delete workout logs                                                         |
@@ -30,6 +38,17 @@ Open http://localhost:5173. The frontend proxies `/api` to port 3001. Stop both 
 | `/protein`           | Authenticated | Protein journal, daily totals and graph                                                      |
 | `/body-weight`       | Authenticated | Body-weight journal with notes and a graph                                                   |
 | `/calendar`          | Authenticated | Logged gym days and daily workout/protein details                                            |
+| `/explore`           | Authenticated | All planning, wellbeing, installation and sharing tools                                    |
+| `/routines`          | Authenticated | Reusable sessions and recent workout durations                                              |
+| `/workouts/active`   | Authenticated | Resumable session, completed sets, effort ratings and rest timer                             |
+| `/goals`             | Authenticated | Weekly training-day targets                                                                 |
+| `/schedule`          | Authenticated | Planned routines and linked completion                                                      |
+| `/overload`          | Authenticated | Evidence-based progression suggestions                                                      |
+| `/muscles`           | Authenticated | Exercise muscle tags and weekly set counts                                                  |
+| `/alternatives`      | Authenticated | Personal exercise substitutions                                                             |
+| `/measurements`      | Authenticated | Private body measurements in centimeters                                                    |
+| `/photos`            | Authenticated | Private progress photo timeline                                                             |
+| `/recovery`          | Authenticated | Private sleep, energy, soreness and mood journal                                             |
 
 Signed-out visits to private URLs redirect to `/login`. On sign-in, the requested page is restored. Session expiry clears account state and redirects to login. The API separately enforces authentication and resource ownership.
 
@@ -79,7 +98,7 @@ API integration tests use a new in-memory database for each test process. Test r
 
 ## Sharing
 
-Only accepted members share data. Accepted members see each other’s historical and future workout logs, including notes. Leaving stops access in both directions. Charts compare the heaviest set per member per day for the selected exercise; all records remain in the shared table. A shared plan is a progress group, not a prescribed schedule.
+Only accepted members can view a shared plan. Each member chooses none, selected workouts or all historical/future workouts, and separately whether notes are included. New memberships default to private workouts with notes hidden. The server filters logs and redacts hidden notes before responding; leaving stops shared access. Charts compare the heaviest shared set per member per day. Members can explicitly publish routine snapshots and import independent copies into their own exercise libraries. Emails, nutrition, body measurements, photos and recovery entries stay private.
 
 ## Deployment
 
@@ -97,9 +116,9 @@ Incoming plan invitations are counted on the header bell and Together navigation
 
 ## Unified account entry and profile setup
 
-Enter a username and password once on `/login`. Existing accounts require the correct password and sign in immediately. A new username begins a three-step illustrated setup for age, body weight and sex. Only after valid profile setup is the account created and a full session issued. Short-lived setup records retain only a password hash, expire after 15 minutes and can be cancelled; refreshing the page can resume the username’s pending setup. Previously collected profile fields restart on refresh. A name claimed by another account during setup is rejected rather than signed in.
+Enter an email and password on `/login`. Existing accounts require the correct password and sign in immediately. A new email begins a three-step illustrated setup for age, body weight and sex. Only after valid profile setup is the account created and a full session issued. Short-lived setup records retain only a password hash, expire after 15 minutes and can be cancelled; refreshing resumes the email's pending setup. Profile fields restart on refresh. Emails are normalized and unique without regard to case. Public handles are generated during signup and can be changed in Profile. Email verification and delivery are not yet implemented.
 
-Profile includes a separate username editor with debounced availability feedback. Names are unique without regard to case, and changes retain the account ID, workout history and shared memberships. The API checks availability again on save.
+Profile includes a separate public-handle editor with debounced availability feedback. Handles are unique without regard to case, and changes retain the account ID, workout history and shared memberships. Sign-in continues to use the email. The API checks handle availability again on save.
 
 Modals render through a document-body portal, cover the viewport, lock background scrolling and make the application inert until closed. Keyboard focus is trapped within the dialog and returned to its trigger. Onboarding transitions respect reduced-motion preferences. The login artwork is a new code-native illustration separate from the dashboard artwork.
 
@@ -111,13 +130,13 @@ Protein entries record grams, date, an optional meal/source and notes. The graph
 
 ## Account recovery and password changes
 
-New users receive a one-use recovery code after profile setup, before entering the dashboard. Save it outside the app; it is shown only once and stored as a hash on the server. Existing users can generate or replace a code in Profile → Account security after confirming their current password. Forgot password requires the username, saved code and a new password. Reset consumes the code and signs out all sessions. Without a saved code or an existing signed-in session, the account cannot be reset through this app; no identity-based shortcuts or email delivery are implemented.
+New users receive a one-use recovery code after profile setup, before entering the dashboard. Save it outside the app; it is shown only once and stored as a hash on the server. Existing users can generate or replace a code in Profile → Account security after confirming their current password. Forgot password requires the email, saved code and a new password. Reset consumes the code and signs out all sessions. There is no email verification or delivery yet. An email address alone cannot authorize a password reset.
 
 Changing a password in Profile requires the current password. The current session stays signed in; other sessions and any previous recovery code are invalidated. Generate a replacement recovery code after changing the password.
 
 ## Navigation and calendar
 
-The desktop header has one persistent Log workout action; mobile uses the central bottom-nav action, with a single-line label and safe-area spacing. Duplicate Overview and journal buttons are removed. Mobile More contains the workout journal, calendar, exercises, progress, Together and profile/security. Profile cards are stacked into balanced columns to avoid wasted space under personal details.
+The desktop header has one persistent Log workout action; mobile uses the central bottom-nav action, with a single-line label and safe-area spacing. Duplicate Overview and journal buttons are removed. Mobile navigation provides Today, Train, Log, Progress and Explore. Explore groups and searches the full tool library. Profile cards are stacked into balanced columns to avoid wasted space under personal details.
 
 Calendar marks days with saved workouts as gym days and elapsed days without logs as No log. Future dates are disabled in the calendar and log forms and rejected by the API. Selecting a date shows all exercise sets, workout notes, protein sources/notes and that day’s protein total, and body-weight entries with notes. Imported workouts also appear automatically. Arrow keys navigate dates; month controls and Today let you browse history. These marks reflect logs, not independently verified gym attendance.
 
@@ -130,3 +149,11 @@ The workout journal supports export and preview-before-import for the versioned 
 Together supports searching plan names and partner usernames. Open a plan at `/together/:id` to view comparisons, logs, members and invitations.
 
 Overview shows the current workout streak, personal best, seven-day activity and next milestone. Each logged date counts once; a streak ending yesterday stays active until today ends. Editing or deleting logs recalculates the streak. Animations respect reduced-motion preferences.
+
+## Expanded features and offline use
+
+See [the expanded feature guide](docs/expanded-features.md) for goals, scheduling, progression, effort ratings, muscle tracking, alternatives, copying, measurements, photos, nutrition, recovery, offline behavior, installation and shared routines. Optional RPE/RIR values are stored per set. Workout journal Copy opens a reviewable new log dated today; it never overwrites the original.
+
+Previously signed-in users can reopen cached personal training offline. New manual logs queue on the device and sync with account checks and retry-safe IDs. Active sessions retain a local draft; finishing or discarding a session requires a connection. Together, account/security changes, and private uploads require a connection. Signing out clears device training caches. Production builds include an installable app and an asset-only offline shell; APIs and private photos are never stored in its service-worker cache.
+
+The standard build uses `/`. For a frontend hosted under the existing project subpath, use `npm run build -w frontend -- --mode pages`; its API still needs a same-origin backend. No hosting or email service is configured automatically.

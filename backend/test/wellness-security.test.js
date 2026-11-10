@@ -8,6 +8,11 @@ await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api`;
 async function request(path, method = "GET", body, cookie) {
+  if (path.startsWith("/auth/") && body?.username && !body.email)
+    body = {
+      ...body,
+      email: `${body.username.toLowerCase() === "renamed_lifter" ? "fresh_lifter" : body.username.toLowerCase()}@example.com`,
+    };
   const response = await fetch(base + path, {
     method,
     headers: {

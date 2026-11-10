@@ -1,3 +1,4 @@
+import { availableHandle } from "./handles.js";
 import { issueRecoveryCode } from "./recovery.js";
 import { randomBytes, randomUUID } from "node:crypto";
 import { db } from "../../database/connection.js";
@@ -50,15 +51,17 @@ export function onboardingRoutes(app, limit, availabilityLimit) {
     "/api/auth/continue",
     limit,
     handler((req, res) => {
-      const credentials = credentialsSchema.parse(req.body);
+      const credentials = credentialsSchema
+        .extend({ username: usernameSchema.optional() })
+        .parse(req.body);
       const user = db
-        .prepare("SELECT * FROM users WHERE username=?")
-        .get(credentials.username);
+        .prepare("SELECT * FROM users WHERE email=?")
+        .get(credentials.email);
       if (user) {
         if (!verifyPassword(credentials.password, user.password))
           return res.status(401).json({
             error:
-              "That username already has an account. The password doesn’t match — try again.",
+              "That email already has an account. The password doesn’t match — try again.",
           });
         clearDraft(req, res);
         createSession(res, user.id);
@@ -69,21 +72,24 @@ export function onboardingRoutes(app, limit, availabilityLimit) {
         Date.now(),
       );
       const token = randomBytes(32).toString("hex");
-      db.prepare("INSERT INTO onboarding_drafts VALUES(?,?,?,?)").run(
+      db.prepare(
+        "INSERT INTO onboarding_drafts(token,username,password_hash,expires,email) VALUES(?,?,?,?,?)",
+      ).run(
         token,
-        credentials.username,
+        availableHandle(credentials.username),
         hashPassword(credentials.password),
         Date.now() + 900000,
+        credentials.email,
       );
       res.cookie("onboarding", token, { ...cookieOptions, maxAge: 900000 });
-      res.json({ status: "onboarding", username: credentials.username });
+      res.json({ status: "onboarding", email: credentials.email });
     }),
   );
   app.get(
     "/api/auth/onboarding",
     handler((req, res) => {
       res.set("Cache-Control", "no-store");
-      res.json({ username: draftFrom(req)?.username || null });
+      res.json({ email: draftFrom(req)?.email || null });
     }),
   );
   app.delete(
@@ -102,26 +108,32 @@ export function onboardingRoutes(app, limit, availabilityLimit) {
       if (!draft)
         return res.status(410).json({
           error:
-            "Your setup session expired. Enter your username and password again to restart.",
+            "Your setup session expired. Enter your email and password again to restart.",
+        });
+      if (db.prepare("SELECT id FROM users WHERE email=?").get(draft.email))
+        return res.status(409).json({
+          error:
+            "That email was just registered. Go back and sign in with the existing account’s password.",
         });
       if (
         db.prepare("SELECT id FROM users WHERE username=?").get(draft.username)
-      )
-        return res.status(409).json({
-          error:
-            "That username was just taken. Go back and choose another name, or use the existing account’s password.",
-        });
+      ) {
+        draft.username = availableHandle();
+      }
       const id = randomUUID();
       let recovery_code;
       db.exec("BEGIN");
       try {
-        db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?)").run(
+        db.prepare(
+          "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+        ).run(
           id,
           draft.username,
           draft.password_hash,
           profile.age,
           profile.weight,
           profile.sex,
+          draft.email,
         );
         db.prepare("DELETE FROM onboarding_drafts WHERE token=?").run(
           draft.token,
@@ -135,12 +147,10 @@ export function onboardingRoutes(app, limit, availabilityLimit) {
       res.set("Cache-Control", "no-store");
       res.clearCookie("onboarding", cookieOptions);
       createSession(res, id);
-      res
-        .status(201)
-        .json({
-          ...publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
-          recovery_code,
-        });
+      res.status(201).json({
+        ...publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
+        recovery_code,
+      });
     }),
   );
 }

@@ -18,6 +18,18 @@ CREATE TABLE IF NOT EXISTS logs(id TEXT PRIMARY KEY,user_id TEXT REFERENCES user
 CREATE TABLE IF NOT EXISTS plans(id TEXT PRIMARY KEY,name TEXT,owner_id TEXT REFERENCES users(id));
 CREATE TABLE IF NOT EXISTS members(plan_id TEXT REFERENCES plans(id),user_id TEXT REFERENCES users(id),accepted INTEGER DEFAULT 0,PRIMARY KEY(plan_id,user_id));`);
 
+if (
+  !db
+    .prepare("PRAGMA table_info(users)")
+    .all()
+    .some((column) => column.name === "email")
+) {
+  db.exec("ALTER TABLE users ADD COLUMN email TEXT COLLATE NOCASE");
+}
+db.exec(
+  "CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email COLLATE NOCASE)",
+);
+
 db.exec(
   `CREATE INDEX IF NOT EXISTS logs_user_date ON logs(user_id,date); CREATE INDEX IF NOT EXISTS exercises_user ON exercises(user_id); CREATE INDEX IF NOT EXISTS memberships_user ON members(user_id); CREATE INDEX IF NOT EXISTS sessions_expiry ON sessions(expires);`,
 );
@@ -30,14 +42,46 @@ if (!columns.some((c) => c.name === "rep_min")) {
 }
 
 migrateTraining(db);
+for (const [name, type] of [
+  ["rpe", "REAL"],
+  ["rir", "INTEGER"],
+]) {
+  if (
+    !db
+      .prepare("PRAGMA table_info(log_sets)")
+      .all()
+      .some((column) => column.name === name)
+  ) {
+    db.exec(`ALTER TABLE log_sets ADD COLUMN ${name} ${type}`);
+  }
+}
 
 // Short-lived setup records hold only a password hash until profile setup finishes.
 db.exec(
   `CREATE TABLE IF NOT EXISTS onboarding_drafts(token TEXT PRIMARY KEY,username TEXT NOT NULL,password_hash TEXT NOT NULL,expires INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS onboarding_expiry ON onboarding_drafts(expires);`,
 );
+if (
+  !db
+    .prepare("PRAGMA table_info(onboarding_drafts)")
+    .all()
+    .some((column) => column.name === "email")
+) {
+  db.exec("ALTER TABLE onboarding_drafts ADD COLUMN email TEXT COLLATE NOCASE");
+}
 
 db.exec(`CREATE TABLE IF NOT EXISTS protein_entries(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),value REAL NOT NULL,date TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '');
 CREATE TABLE IF NOT EXISTS weight_entries(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),value REAL NOT NULL,date TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '');
 CREATE INDEX IF NOT EXISTS protein_user_date ON protein_entries(user_id,date);
 CREATE INDEX IF NOT EXISTS weight_user_date ON weight_entries(user_id,date);
 CREATE TABLE IF NOT EXISTS account_security(user_id TEXT PRIMARY KEY REFERENCES users(id),recovery_hash TEXT);`);
+
+db.exec(`CREATE TABLE IF NOT EXISTS routines(
+  id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,
+  notes TEXT NOT NULL DEFAULT '',exercises TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS routines_user ON routines(user_id);
+CREATE TABLE IF NOT EXISTS training_sessions(
+  id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,
+  started_at INTEGER NOT NULL,finished_at INTEGER,exercises TEXT NOT NULL,
+  rest_seconds INTEGER NOT NULL DEFAULT 90,rest_until INTEGER,
+  notes TEXT NOT NULL DEFAULT '');
+CREATE UNIQUE INDEX IF NOT EXISTS training_active_user ON training_sessions(user_id) WHERE finished_at IS NULL;`);

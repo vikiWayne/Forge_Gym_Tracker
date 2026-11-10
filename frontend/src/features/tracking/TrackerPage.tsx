@@ -8,7 +8,7 @@ import { localDate } from "../../shared/lib/dates";
 import { PageHeader } from "../../shared/ui/PageHeader";
 import { ErrorMessage, LoadingState } from "../../shared/ui/Feedback";
 import { Modal } from "../../shared/ui/Modal";
-import { ProteinIllustration } from "../protein/ProteinIllustration";
+import { NutritionTarget } from "../nutrition/NutritionTarget";
 import { useTracker } from "./useTracker";
 import { TrackerChart } from "./TrackerChart";
 import { TrackerForm } from "./TrackerForm";
@@ -25,11 +25,7 @@ export function TrackerPage({ kind }: { kind: TrackerKind }) {
   const [deleting, setDeleting] = useState<TrackerEntry | null>(null);
   const [range, setRange] = useState("90");
   const config = trackerConfig[kind];
-  const todayTotal = entries
-    .filter((entry) => entry.date === localDate())
-    .reduce((total, entry) => total + entry.value, 0);
-  const current =
-    kind === "protein" ? todayTotal : (entries[0]?.value ?? user?.weight ?? 0);
+  const current = entries[0]?.value ?? user?.weight ?? 0;
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - Number(range));
   const filtered = entries.filter((entry) => entry.date >= localDate(cutoff));
@@ -52,37 +48,30 @@ export function TrackerPage({ kind }: { kind: TrackerKind }) {
           </button>
         }
       />
-      <section className={`tracker-hero tracker-${kind}`}>
-        <div>
-          <span className="section-kicker">
-            {kind === "protein"
-              ? "TODAY’S LOGGED PROTEIN"
-              : entries.length
+      {kind === "body-weight" && (
+        <section className="tracker-hero tracker-body-weight">
+          <div>
+            <span className="section-kicker">
+              {entries.length
                 ? "LATEST RECORDED WEIGHT"
                 : "CURRENT PROFILE WEIGHT"}
-          </span>
-          <div className="tracker-total">
-            {current.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-            <span>{config.unit}</span>
+            </span>
+            <div className="tracker-total">
+              {current.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+              <span>{config.unit}</span>
+            </div>
+            <p>Your own measurements. A little context for every number.</p>
           </div>
-          <p>
-            {kind === "protein"
-              ? "A journal of what you’ve logged, without guesses or made-up targets."
-              : "A record of your own measurements. Notes help keep each number in context."}
-          </p>
-        </div>
-        {kind === "protein" ? (
-          <ProteinIllustration />
-        ) : (
           <span className="body-weight-symbol">
             <Scale size={72} />
             <span>✳</span>
           </span>
-        )}
-      </section>
+        </section>
+      )}
+      {kind === "protein" && <NutritionTarget entries={entries} />}
       <section className="panel">
         <div className="section-head">
           <div>

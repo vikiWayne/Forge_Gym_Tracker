@@ -3,7 +3,15 @@ import { db } from "../../database/connection.js";
 import { handler } from "../../shared/handler.js";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
+import {
+  initializeSharing,
+  sharingFor,
+  sharedLogs,
+  sharingRoutes,
+} from "./privacy.js";
 export function planRoutes(app) {
+  initializeSharing();
+  sharingRoutes(app);
   app.post(
     "/api/plans",
     handler((req, res) => {
@@ -75,6 +83,7 @@ export function planRoutes(app) {
     res.json(
       plans.map((p) => ({
         ...p,
+        sharing: sharingFor(p.id, req.userId),
         pending_invites:
           p.owner_id === req.userId && p.accepted
             ? db
@@ -90,15 +99,7 @@ export function planRoutes(app) {
               )
               .all(p.id)
           : [],
-        logs: p.accepted
-          ? withSets(
-              db
-                .prepare(
-                  "SELECT l.*,e.name,u.username FROM logs l JOIN exercises e ON e.id=l.exercise_id JOIN users u ON u.id=l.user_id JOIN members m ON m.user_id=l.user_id WHERE m.plan_id=? AND m.accepted=1 ORDER BY l.date DESC",
-                )
-                .all(p.id),
-            )
-          : [],
+        logs: p.accepted ? withSets(sharedLogs(p.id, req.userId)) : [],
       })),
     );
   });

@@ -3,16 +3,19 @@ import { useState } from "react";
 export function useAsyncAction() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  async function run(task: () => Promise<void>) {
+  async function run(
+    task: () => Promise<void>,
+    options: { feedback?: boolean } = {},
+  ) {
     const id = crypto.randomUUID();
-    announceAction({ id, phase: "pending" });
+    if (options.feedback !== false) announceAction({ id, phase: "pending" });
     setPending(true);
     setError("");
     try {
       await task();
-      announceAction({ id, phase: "success" });
+      if (options.feedback !== false) announceAction({ id, phase: "success" });
     } catch (cause) {
-      announceAction({ id, phase: "error" });
+      if (options.feedback !== false) announceAction({ id, phase: "error" });
       setError(
         cause instanceof Error
           ? cause.message

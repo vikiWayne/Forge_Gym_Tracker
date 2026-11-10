@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api } from "../../shared/api/client";
+import { api, ApiError } from "../../shared/api/client";
 import type { Category, Exercise, Log, Plan } from "../../shared/api/types";
 type TrainingData = {
   categories: Category[];
@@ -43,6 +43,13 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         setInvitationError("");
       }
     } catch (cause) {
+      if (!(cause instanceof ApiError)) {
+        setData((previous) => ({ ...previous, plans: [] }));
+        setInvitationError(
+          "Shared plans need a connection. Your personal training is available offline.",
+        );
+        return;
+      }
       if (request === version.current)
         setInvitationError(
           "Invitations could not be refreshed. Please try again.",
@@ -62,6 +69,13 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     refresh()
       .catch((cause) => setError(cause.message))
       .finally(() => setLoading(false));
+  }, [refresh]);
+  useEffect(() => {
+    const synced = () => {
+      void refresh().catch((cause) => setError(cause.message));
+    };
+    window.addEventListener("forge:workout-synced", synced);
+    return () => window.removeEventListener("forge:workout-synced", synced);
   }, [refresh]);
   useEffect(() => {
     let checking = false;

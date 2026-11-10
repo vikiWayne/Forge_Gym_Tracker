@@ -25,7 +25,7 @@ export function InvitationStatus({ plan }: { plan: Plan }) {
       </ul>
       <p>
         Your partner will see a notification in their FORGE app. Their logs stay
-        private until they accept.
+        private until they accept and choose what to share.
       </p>
     </div>
   );

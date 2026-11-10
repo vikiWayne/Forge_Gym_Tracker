@@ -1,0 +1,51 @@
+.measurement-overview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.measurement-overview h2 {
+  margin-top: 16px;
+}
+.measurement-overview > label {
+  width: 240px;
+  max-width: 100%;
+}
+.measurement-value {
+  display: block;
+  font-size: 32px;
+  margin: 12px 0 5px;
+  font-variant-numeric: tabular-nums;
+}
+.measurement-history {
+  margin-top: 24px;
+}
+.measurement-history .loading-state {
+  min-height: 250px;
+}
+.measurement-history > .field-hint {
+  margin-top: 18px;
+}
+.measurement-notes {
+  white-space: pre-wrap;
+  min-width: 140px;
+  max-width: 350px;
+  overflow-wrap: anywhere;
+}
+.measurement-empty {
+  padding: 25px 0 10px;
+}
+@media (max-width: 650px) {
+  .measurement-overview {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .measurement-overview > label {
+    width: 100%;
+  }
+  .measurement-value {
+    font-size: 28px;
+  }
+}

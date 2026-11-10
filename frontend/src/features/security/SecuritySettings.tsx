@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ChevronDown, ShieldCheck } from "lucide-react";
 import { api } from "../../shared/api/client";
 import { ErrorMessage } from "../../shared/ui/Feedback";
 import { PasswordChangeForm } from "./PasswordChangeForm";
@@ -17,20 +18,29 @@ export function SecuritySettings() {
   }, []);
   useEffect(load, [load]);
   return (
-    <div className="security-settings">
-      <h2>Account security</h2>
-      <ErrorMessage message={error} />
-      <PasswordChangeForm
-        onChanged={() => {
-          setRevision((value) => value + 1);
-          load();
-        }}
-      />
-      <RecoveryCodeSettings
-        key={revision}
-        hasCode={hasCode}
-        onGenerated={load}
-      />
-    </div>
+    <details className="security-settings panel security-disclosure">
+      <summary>
+        <ShieldCheck size={23} />
+        <div>
+          <strong>Account security</strong>
+          <span>Password & recovery code</span>
+        </div>
+        <ChevronDown size={18} />
+      </summary>
+      <div className="security-content">
+        <ErrorMessage message={error} />
+        <PasswordChangeForm
+          onChanged={() => {
+            setRevision((value) => value + 1);
+            load();
+          }}
+        />
+        <RecoveryCodeSettings
+          key={revision}
+          hasCode={hasCode}
+          onGenerated={load}
+        />
+      </div>
+    </details>
   );
 }

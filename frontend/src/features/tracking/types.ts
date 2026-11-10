@@ -8,19 +8,17 @@ export type TrackerEntry = {
 };
 export const trackerConfig = {
   protein: {
-    title: "Fuel your stronger days.",
+    title: "Fuel your day.",
     eyebrow: "YOUR DAILY PROTEIN JOURNAL",
-    description:
-      "Keep a simple record of the protein you log. Little entries, a clearer picture.",
+    description: "Log protein and follow the target you choose.",
     unit: "g",
     label: "Protein (g)",
     action: "Log protein",
   },
   "body-weight": {
-    title: "Your journey, one weigh-in at a time.",
+    title: "Your weight, in context.",
     eyebrow: "YOUR BODY-WEIGHT JOURNAL",
-    description:
-      "Track your weight over time. Add a note about the day, if you like.",
+    description: "Record your measurements and see your own trend.",
     unit: "kg",
     label: "Body weight (kg)",
     action: "Log body weight",

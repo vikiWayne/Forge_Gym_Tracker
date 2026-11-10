@@ -1,117 +1,124 @@
-import { StreakCard } from "../streak/StreakCard";
 import { useState } from "react";
-import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Dumbbell, Target } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../app/providers/AuthProvider";
 import { useTraining } from "../../app/providers/TrainingProvider";
 import { PageHeader } from "../../shared/ui/PageHeader";
-import { EmptyState } from "../../shared/ui/Feedback";
-import { OverviewIllustration } from "./OverviewIllustration";
+import { formatDate } from "../../shared/lib/dates";
 import { ExerciseChart } from "../progress/ExerciseChart";
-import { WorkoutTable } from "../workouts/WorkoutTable";
 import { StatsGrid } from "./StatsGrid";
-import { WeeklyActivity } from "./WeeklyActivity";
+import { JourneyCard, Milestones } from "./JourneyCard";
+import { DailyQuests } from "./DailyQuests";
+import { StreakCard } from "../streak/StreakCard";
 export function DashboardPage() {
-  const { user } = useAuth();
   const { logs, exercises } = useTraining();
   const [selected, setSelected] = useState("");
+  const saved = logs.filter((log) => !log.pending_sync);
   const exercise =
-    exercises.find((item) => item.id === selected) || exercises[0];
+    exercises.find((item) => item.id === selected) ||
+    exercises.find((item) => saved.some((log) => log.exercise_id === item.id));
   return (
     <>
       <PageHeader
-        eyebrow="YOUR DAILY DOSE OF STRONG"
-        title={`Hey ${user?.username}. You’ve got this.`}
-        description="A fresh day. A little more possibility. Let’s make it yours."
+        eyebrow={new Date()
+          .toLocaleDateString(undefined, {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })
+          .toUpperCase()}
+        title="A little progress, every day."
+        description="Your pace. Your progress. One small win at a time."
       />
-      <section className="welcome-banner">
-        <div>
-          <span className="banner-label">
-            <Sparkles size={14} /> BUILT ONE REP AT A TIME
-          </span>
-          <h2>
-            You’re not starting over.
-            <br />
-            You’re <em>building yourself.</em>
-          </h2>
-          <p>Show up for your goals. We’ll keep track of the good stuff.</p>
-          <Link className="button banner-button" to="/exercises">
-            {exercises.length
-              ? "Explore your exercises"
-              : "Start with an exercise"}
-            <ArrowUpRight size={17} />
-          </Link>
-        </div>
-        <div className="banner-art overview-illustration-art">
-          <OverviewIllustration />
-        </div>
-        <span className="banner-sparkle">✳</span>
-      </section>
-      <StreakCard />
-      <StatsGrid logs={logs} exercises={exercises} />
-      <div className="dashboard-grid">
-        <section className="panel">
+      <JourneyCard />
+      <DailyQuests />
+      <nav className="today-shortcuts" aria-label="Plan your week">
+        <Link to="/goals">
+          <Target size={17} />
+          Weekly goal
+          <ArrowUpRight size={15} />
+        </Link>
+        <Link to="/schedule">
+          <CalendarDays size={17} />
+          Schedule
+          <ArrowUpRight size={15} />
+        </Link>
+        <Link to="/calendar">
+          <CalendarDays size={17} />
+          Calendar
+          <ArrowUpRight size={15} />
+        </Link>
+      </nav>
+      {saved.length > 0 && <StatsGrid logs={saved} exercises={exercises} />}
+      <Milestones />
+      {exercise && (
+        <section className="panel today-chart">
           <div className="section-head">
             <div>
-              <span className="section-kicker">YOUR HARD WORK, VISUALIZED</span>
-              <h2>A little stronger than before</h2>
+              <span className="section-kicker">PROOF OF YOUR EFFORT</span>
+              <h2>Your strength story</h2>
             </div>
-            {exercise && (
-              <select
-                aria-label="Exercise to chart"
-                value={exercise.id}
-                onChange={(event) => setSelected(event.target.value)}
-              >
-                {exercises.map((item) => (
-                  <option value={item.id} key={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-          {exercise ? (
-            <ExerciseChart
-              id={`overview-${exercise.id}`}
-              logs={logs.filter((log) => log.exercise_id === exercise.id)}
-            />
-          ) : (
-            <EmptyState
-              title="Your strength story starts here."
-              to="/exercises"
-              action="Add an exercise"
+            <select
+              aria-label="Exercise to chart"
+              value={exercise.id}
+              onChange={(event) => setSelected(event.target.value)}
             >
-              Add a movement, then log your first session. Every point on this
-              chart will be yours.
-            </EmptyState>
-          )}
-        </section>
-        <WeeklyActivity logs={logs} />
-      </div>
-      <section className="panel activity-panel">
-        <div className="section-head">
-          <div>
-            <span className="section-kicker">THE WORK YOU PUT IN</span>
-            <h2>Fresh from your journal</h2>
+              {exercises.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <Link className="text-link" to="/workouts">
-            View all workouts
-            <ArrowRight size={15} />
-          </Link>
-        </div>
-        {logs.length ? (
-          <WorkoutTable logs={logs.slice(0, 4)} exercises={exercises} />
-        ) : (
-          <EmptyState
-            title="Good things are on the way."
-            to={exercises.length ? undefined : "/exercises"}
-            action={exercises.length ? undefined : "Add your first movement"}
-          >
-            No workouts yet. Use the Log workout action in the header or mobile
-            navigation to start your journal.
-          </EmptyState>
-        )}
-      </section>
+          <ExerciseChart
+            id={"overview-" + exercise.id}
+            logs={saved.filter((log) => log.exercise_id === exercise.id)}
+          />
+        </section>
+      )}
+      {logs.length > 0 && (
+        <section className="panel recent-workouts">
+          <div className="section-head">
+            <h2>Recently logged</h2>
+            <Link className="text-link" to="/workouts">
+              Journal
+              <ArrowUpRight size={15} />
+            </Link>
+          </div>
+          {logs.slice(0, 3).map((log) => (
+            <Link
+              className="recent-workout-row"
+              key={log.id}
+              to={
+                log.pending_sync ? "/workouts" : "/workouts/" + log.id + "/edit"
+              }
+            >
+              <span className="recent-workout-icon">
+                <Dumbbell size={19} />
+              </span>
+              <div>
+                <strong>
+                  {exercises.find((item) => item.id === log.exercise_id)
+                    ?.name || "Workout"}
+                </strong>
+                <span>
+                  {log.pending_sync ? "Waiting to sync" : formatDate(log.date)}{" "}
+                  · {log.sets.length} {log.sets.length === 1 ? "set" : "sets"}
+                </span>
+              </div>
+              <b>
+                {log.weight} <small>kg</small>
+              </b>
+              <ArrowUpRight size={16} />
+            </Link>
+          ))}
+        </section>
+      )}
+      <details className="streak-details">
+        <summary>
+          Your training rhythm<span>View streak & week</span>
+        </summary>
+        <StreakCard />
+      </details>
     </>
   );
 }

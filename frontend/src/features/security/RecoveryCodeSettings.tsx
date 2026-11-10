@@ -47,9 +47,8 @@ export function RecoveryCodeSettings({
                 : "Set up a recovery code now, so a forgotten password won’t lock you out."}
           </p>
           <p className="field-hint">
-            There is no email address on your account. Recovery uses this
-            private, one-use code. Generating a new one replaces any previous
-            code.
+            Email verification is not enabled yet. Recovery uses this private,
+            one-use code. Generating a new one replaces any previous code.
           </p>
           <form ref={form} onSubmit={submit}>
             <PasswordInput

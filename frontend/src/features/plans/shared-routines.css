@@ -1,0 +1,104 @@
+.shared-routines {
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+.shared-routines h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.shared-routines .loading-state {
+  min-height: 150px;
+}
+.share-routine-form {
+  background: var(--surface-soft);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 20px 0;
+}
+.share-routine-form > label:first-child {
+  margin-top: 0;
+}
+.shared-routine-consent {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.shared-routine-consent input {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  margin-top: 3px;
+}
+.shared-routine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+.shared-routine-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.shared-routine-card h4 {
+  font-size: 17px;
+  margin: 0 0 9px;
+  overflow-wrap: anywhere;
+}
+.shared-routine-card p {
+  font-size: 13px;
+}
+.shared-routine-card details {
+  margin-top: 16px;
+}
+.shared-routine-card summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.shared-routine-card ol {
+  padding-left: 20px;
+}
+.shared-routine-card li {
+  padding: 8px 0;
+  font-size: 13px;
+}
+.shared-routine-card li > span {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.shared-routine-notes {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 12px;
+}
+.shared-routine-empty {
+  padding: 20px 0;
+  font-size: 14px;
+}
+@media (max-width: 900px) {
+  .shared-routine-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 650px) {
+  .share-routine-form,
+  .shared-routine-card {
+    padding: 15px;
+  }
+  .shared-routines > .section-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

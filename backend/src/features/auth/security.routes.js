@@ -2,7 +2,7 @@ import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { db } from "../../database/connection.js";
 import { handler } from "../../shared/handler.js";
-import { usernameSchema, passwordSchema } from "./auth.schemas.js";
+import { credentialsSchema, passwordSchema } from "./auth.schemas.js";
 import { hashPassword, verifyPassword } from "./passwords.js";
 import { issueRecoveryCode, verifyRecovery } from "./recovery.js";
 const limit = () => rateLimit({ windowMs: 900000, limit: 10 });
@@ -14,23 +14,21 @@ export function passwordResetRoutes(app) {
       res.set("Cache-Control", "no-store");
       const data = z
         .object({
-          username: usernameSchema,
+          email: credentialsSchema.shape.email,
           recovery_code: z.string().min(8).max(128),
           new_password: passwordSchema,
         })
         .parse(req.body);
       const user = db
         .prepare(
-          "SELECT u.*,s.recovery_hash FROM users u LEFT JOIN account_security s ON s.user_id=u.id WHERE u.username=?",
+          "SELECT u.*,s.recovery_hash FROM users u LEFT JOIN account_security s ON s.user_id=u.id WHERE u.email=?",
         )
-        .get(data.username);
+        .get(data.email);
       if (!verifyRecovery(data.recovery_code, user?.recovery_hash))
-        return res
-          .status(400)
-          .json({
-            error:
-              "The username and recovery code don’t match, or this code has already been used. Check your saved code and try again.",
-          });
+        return res.status(400).json({
+          error:
+            "The email and recovery code don’t match, or this code has already been used. Check your saved code and try again.",
+        });
       db.exec("BEGIN");
       try {
         db.prepare("UPDATE users SET password=? WHERE id=?").run(
@@ -42,8 +40,8 @@ export function passwordResetRoutes(app) {
         ).run(user.id);
         db.prepare("DELETE FROM sessions WHERE user_id=?").run(user.id);
         db.prepare(
-          "DELETE FROM onboarding_drafts WHERE username=? COLLATE NOCASE",
-        ).run(user.username);
+          "DELETE FROM onboarding_drafts WHERE email=? COLLATE NOCASE",
+        ).run(user.email);
         db.exec("COMMIT");
       } catch (error) {
         db.exec("ROLLBACK");
@@ -114,8 +112,8 @@ export function securityRoutes(app) {
           req.token,
         );
         db.prepare(
-          "DELETE FROM onboarding_drafts WHERE username=? COLLATE NOCASE",
-        ).run(user.username);
+          "DELETE FROM onboarding_drafts WHERE email=? COLLATE NOCASE",
+        ).run(user.email);
         db.exec("COMMIT");
       } catch (error) {
         db.exec("ROLLBACK");

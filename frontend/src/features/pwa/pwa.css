@@ -1,0 +1,39 @@
+.pwa-install-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 24px;
+}
+.pwa-install-panel > div:first-child {
+  flex: 1 1 260px;
+}
+.pwa-install-panel h2 {
+  margin-bottom: 8px;
+}
+.pwa-install-panel p {
+  font-size: 14px;
+}
+.pwa-install-help {
+  width: 100%;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+.pwa-update {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 15px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 650px) {
+  .pwa-install-panel {
+    align-items: stretch;
+  }
+  .pwa-install-panel > .button {
+    width: 100%;
+  }
+}

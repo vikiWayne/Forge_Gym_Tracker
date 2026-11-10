@@ -16,7 +16,7 @@ export function StatsGrid({
     {
       label: "Workouts logged",
       value: logs.length,
-      unit: "sessions",
+      unit: logs.length === 1 ? "workout" : "workouts",
       note: "Every session is a win",
       icon: Dumbbell,
       tone: "teal",
@@ -30,9 +30,9 @@ export function StatsGrid({
       tone: "peach",
     },
     {
-      label: "Active days",
+      label: "Training days",
       value: new Set(logs.map((log) => log.date)).size,
-      unit: "days",
+      unit: new Set(logs.map((log) => log.date)).size === 1 ? "day" : "days",
       note: "Building your own rhythm",
       icon: Flame,
       tone: "mint",
@@ -40,7 +40,10 @@ export function StatsGrid({
     {
       label: "Ready to level up",
       value: exercises.filter((exercise) => exercise.ready).length,
-      unit: "exercises",
+      unit:
+        exercises.filter((exercise) => exercise.ready).length === 1
+          ? "exercise"
+          : "exercises",
       note: "A little more in the tank",
       icon: Zap,
       tone: "pink",

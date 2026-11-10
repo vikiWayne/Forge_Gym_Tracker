@@ -1,3 +1,4 @@
+import { availableHandle } from "./handles.js";
 import { issueRecoveryCode } from "./recovery.js";
 import { onboardingRoutes } from "./onboarding.routes.js";
 import { randomUUID } from "node:crypto";
@@ -15,34 +16,36 @@ export function authRoutes(app) {
     limit,
     handler((req, res) => {
       const account = registrationSchema.parse(req.body);
-      if (
-        db
-          .prepare("SELECT id FROM users WHERE username=?")
-          .get(account.username)
-      ) {
+      if (db.prepare("SELECT id FROM users WHERE email=?").get(account.email)) {
         return res.status(409).json({
           error:
-            "That username already has a training buddy! Choose another username, or sign in if this account is yours.",
+            "This email already has an account. Sign in with its password.",
         });
       }
       const id = randomUUID();
-      db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?)").run(
+      const username = availableHandle(account.username);
+      if (db.prepare("SELECT id FROM users WHERE username=?").get(username))
+        return res
+          .status(409)
+          .json({ error: "That public handle is taken. Choose another one." });
+      db.prepare(
+        "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+      ).run(
         id,
-        account.username,
+        username,
         hashPassword(account.password),
         account.age,
         account.weight,
         account.sex,
+        account.email,
       );
       const recovery_code = issueRecoveryCode(id);
       res.set("Cache-Control", "no-store");
       createSession(res, id);
-      res
-        .status(201)
-        .json({
-          ...publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
-          recovery_code,
-        });
+      res.status(201).json({
+        ...publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
+        recovery_code,
+      });
     }),
   );
   app.post(
@@ -51,12 +54,12 @@ export function authRoutes(app) {
     handler((req, res) => {
       const credentials = credentialsSchema.parse(req.body);
       const user = db
-        .prepare("SELECT * FROM users WHERE username=?")
-        .get(credentials.username);
+        .prepare("SELECT * FROM users WHERE email=?")
+        .get(credentials.email);
       if (!verifyPassword(credentials.password, user?.password))
         return res
           .status(401)
-          .json({ error: "Username or password is incorrect." });
+          .json({ error: "Email or password is incorrect." });
       createSession(res, user.id);
       res.json(publicUser(user));
     }),

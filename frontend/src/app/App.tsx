@@ -16,6 +16,61 @@ import { ThemeProvider } from "./providers/ThemeProvider";
 import { TrainingProvider } from "./providers/TrainingProvider";
 import { AppLayout } from "./layout/AppLayout";
 import { LoginPage } from "../features/auth/LoginPage";
+const ExplorePage = lazy(() =>
+  import("../features/explore/ExplorePage").then((module) => ({
+    default: module.ExplorePage,
+  })),
+);
+const WeeklyGoalsPage = lazy(() =>
+  import("../features/goals/WeeklyGoalsPage").then((module) => ({
+    default: module.WeeklyGoalsPage,
+  })),
+);
+const SchedulePage = lazy(() =>
+  import("../features/schedule/SchedulePage").then((module) => ({
+    default: module.SchedulePage,
+  })),
+);
+const OverloadPage = lazy(() =>
+  import("../features/overload/OverloadPage").then((module) => ({
+    default: module.OverloadPage,
+  })),
+);
+const MuscleGroupsPage = lazy(() =>
+  import("../features/muscles/MuscleGroupsPage").then((module) => ({
+    default: module.MuscleGroupsPage,
+  })),
+);
+const AlternativesPage = lazy(() =>
+  import("../features/alternatives/AlternativesPage").then((module) => ({
+    default: module.AlternativesPage,
+  })),
+);
+const PhotosPage = lazy(() =>
+  import("../features/photos/PhotosPage").then((module) => ({
+    default: module.PhotosPage,
+  })),
+);
+const MeasurementsPage = lazy(() =>
+  import("../features/measurements/MeasurementsPage").then((module) => ({
+    default: module.MeasurementsPage,
+  })),
+);
+const RecoveryPage = lazy(() =>
+  import("../features/recovery/RecoveryPage").then((module) => ({
+    default: module.RecoveryPage,
+  })),
+);
+const RoutinesPage = lazy(() =>
+  import("../features/routines/RoutinesPage").then((module) => ({
+    default: module.RoutinesPage,
+  })),
+);
+const ActiveWorkoutPage = lazy(() =>
+  import("../features/routines/ActiveWorkoutPage").then((module) => ({
+    default: module.ActiveWorkoutPage,
+  })),
+);
 const CalendarPage = lazy(() =>
   import("../features/calendar/CalendarPage").then((module) => ({
     default: module.CalendarPage,
@@ -107,6 +162,17 @@ function AppRoutes() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
           <Route path="/workouts" element={<WorkoutsPage />} />
+          <Route path="/routines" element={<RoutinesPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/goals" element={<WeeklyGoalsPage />} />
+          <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/overload" element={<OverloadPage />} />
+          <Route path="/muscles" element={<MuscleGroupsPage />} />
+          <Route path="/alternatives" element={<AlternativesPage />} />
+          <Route path="/photos" element={<PhotosPage />} />
+          <Route path="/measurements" element={<MeasurementsPage />} />
+          <Route path="/recovery" element={<RecoveryPage />} />
+          <Route path="/workouts/active" element={<ActiveWorkoutPage />} />
           <Route path="/workouts/new" element={<WorkoutEditorPage />} />
           <Route path="/workouts/:id/edit" element={<WorkoutEditorPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
@@ -125,7 +191,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter
+        basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}
+      >
         <RouteScrollReset />
         <AuthProvider>
           <AppRoutes />

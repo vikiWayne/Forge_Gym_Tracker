@@ -21,7 +21,7 @@ export function ForgotPasswordPage() {
       if (data.get("new_password") !== data.get("confirm_password"))
         throw new Error("Your new passwords do not match.");
       await api("/auth/reset-password", "POST", {
-        username: data.get("username"),
+        email: data.get("email"),
         recovery_code: data.get("recovery_code"),
         new_password: data.get("new_password"),
       });
@@ -61,17 +61,18 @@ export function ForgotPasswordPage() {
           ) : (
             <>
               <p>
-                Use your username and the recovery code you saved during setup
-                or in Profile → Account security.
+                Use your email and the recovery code you saved during setup or
+                in Profile → Account security.
               </p>
               <form onSubmit={submit}>
                 <label>
-                  Username
+                  Email address
                   <input
-                    name="username"
-                    autoComplete="username"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
                     minLength={3}
-                    maxLength={30}
+                    maxLength={254}
                     pattern="[a-zA-Z0-9_]+"
                     required
                   />

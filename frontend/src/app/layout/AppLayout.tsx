@@ -1,4 +1,5 @@
 import { MobileNav } from "./MobileNav";
+import { OfflineStatus } from "../../features/offline/OfflineStatus";
 import { InvitationNotifications } from "../../features/plans/InvitationNotifications";
 import {
   Activity,
@@ -9,11 +10,11 @@ import {
   Settings2,
   TrendingUp,
   Users,
-  Zap,
   Scale,
   Utensils,
   Plus,
   CalendarDays,
+  Compass,
 } from "lucide-react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
@@ -23,26 +24,41 @@ import { Brand } from "../../shared/ui/Brand";
 import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 import { ErrorMessage, LoadingState } from "../../shared/ui/Feedback";
 const navigation = [
-  { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Today", icon: LayoutDashboard },
   { to: "/workouts", label: "Workout log", icon: Dumbbell },
   { to: "/exercises", label: "Exercises", icon: Activity },
+  { to: "/routines", label: "Routines", icon: Dumbbell },
+  { to: "/explore", label: "Explore tools", icon: Compass },
   { to: "/protein", label: "Protein", icon: Utensils },
   { to: "/body-weight", label: "Body weight", icon: Scale },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/progress", label: "Progress", icon: TrendingUp },
   { to: "/together", label: "Together", icon: Users },
 ];
+const toolTitles: Record<string, string> = {
+  "/goals": "Weekly goals",
+  "/schedule": "Workout schedule",
+  "/overload": "Progression suggestions",
+  "/muscles": "Muscle groups",
+  "/alternatives": "Exercise alternatives",
+  "/measurements": "Body measurements",
+  "/photos": "Progress photos",
+  "/recovery": "Recovery journal",
+};
 export function AppLayout() {
   const { user, logout } = useAuth();
-  const { loading, error: dataError, logs, refresh, plans } = useTraining();
+  const { loading, error: dataError, refresh, plans } = useTraining();
   const { pending, error, run } = useAsyncAction();
   const { pathname } = useLocation();
   const invitationCount = plans.filter((plan) => !plan.accepted).length;
   const title =
     navigation.find((item) => pathname.startsWith(item.to))?.label ||
+    toolTitles[pathname] ||
     "Your profile";
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${pathname === "/workouts/active" ? "session-focused" : ""}`}
+    >
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -50,7 +66,7 @@ export function AppLayout() {
         <NavLink to="/dashboard" aria-label="Forge home">
           <Brand />
         </NavLink>
-        <div className="nav-label">YOUR LITTLE CORNER OF STRONG</div>
+        <div className="nav-label">YOUR TRAINING SPACE</div>
         <nav aria-label="Main navigation">
           {navigation.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -62,7 +78,7 @@ export function AppLayout() {
                   : label
               }
               className={({ isActive }) =>
-                `nav-link ${isActive ? "active" : ""}`
+                `nav-link ${isActive || (to === "/explore" && toolTitles[pathname]) ? "active" : ""}`
               }
             >
               <Icon size={19} />
@@ -77,17 +93,6 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="journey-card">
-            <span className="journey-icon">
-              <Zap size={20} />
-            </span>
-            <strong>Your journey, your pace.</strong>
-            <p>
-              {logs.length
-                ? `${logs.length} workout${logs.length === 1 ? "" : "s"} logged. Every one counts.`
-                : "Your first rep is the start of something good."}
-            </p>
-          </div>
           <NavLink to="/profile" className="nav-link">
             <Settings2 size={19} />
             <span>Profile & settings</span>
@@ -95,7 +100,7 @@ export function AppLayout() {
           <button
             className="nav-link logout"
             disabled={pending}
-            onClick={() => void run(logout)}
+            onClick={() => void run(logout, { feedback: false })}
           >
             <LogOut size={18} />
             <span>Sign out</span>
@@ -131,6 +136,7 @@ export function AppLayout() {
           </div>
         </header>
         <main id="main" className="page-container">
+          <OfflineStatus />
           <ErrorMessage message={error} />
           {loading ? (
             <LoadingState />

@@ -1,0 +1,97 @@
+.muscle-week {
+  margin-bottom: 24px;
+}
+.muscle-explanation {
+  margin: 18px 0 24px;
+  max-width: 850px;
+}
+.muscle-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 32px;
+}
+.muscle-total > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 14px;
+  margin-bottom: 9px;
+}
+.muscle-total strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.muscle-bar {
+  height: 9px;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.muscle-bar span {
+  display: block;
+  height: 100%;
+  background: var(--chart-primary);
+  border-radius: inherit;
+}
+.muscle-untagged {
+  margin-top: 26px;
+  font-size: 14px;
+}
+.muscle-editor {
+  max-width: 900px;
+}
+.muscle-tag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  margin: 24px 0 16px;
+}
+.muscle-tag-options legend {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.muscle-tag-options .muscle-tag {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.muscle-tag.selected {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  border-color: var(--accent);
+}
+.muscle-tag input {
+  width: 17px;
+  min-height: 17px;
+  height: 17px;
+  accent-color: var(--primary);
+  padding: 0;
+}
+.muscle-editor .field-hint {
+  margin-bottom: 18px;
+}
+.muscle-library-link {
+  margin-top: 18px;
+}
+@media (max-width: 650px) {
+  .muscle-totals {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .muscle-tag-options {
+    gap: 8px;
+  }
+  .muscle-tag-options .muscle-tag {
+    padding: 9px 10px;
+  }
+}

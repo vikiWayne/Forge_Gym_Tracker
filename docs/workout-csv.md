@@ -1,5 +1,7 @@
 # Workout CSV transfer
 
+The v1 CSV format transfers weights and reps. Optional RPE/RIR effort ratings are retained in the application but are not columns in this version of CSV; importing CSV leaves effort ratings unset.
+
 The workout journal’s **Export CSV** downloads all of the signed-in account’s workout logs, one row per set, in UTF-8 with a BOM. An empty journal exports a header-only template. **Import CSV** validates and previews the file before the explicit import action. Files are limited to 2 MiB and 10,000 set rows.
 
 ## Columns

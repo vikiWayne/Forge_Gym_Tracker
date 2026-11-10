@@ -15,15 +15,32 @@ import { authRoutes } from "./features/auth/auth.routes.js";
 import { profileRoutes } from "./features/profile/profile.routes.js";
 import { exerciseRoutes } from "./features/exercises/exercises.routes.js";
 import { workoutRoutes } from "./features/workouts/workouts.routes.js";
+import { routinesRoutes } from "./features/workouts/routines.routes.js";
+import { trainingSessionRoutes } from "./features/workouts/trainingSession.routes.js";
 import { trainingRoutes } from "./features/workouts/training.routes.js";
 import { planRoutes } from "./features/plans/plans.routes.js";
+import { sharedRoutineRoutes } from "./features/plans/sharedRoutines.routes.js";
+import { goalsRoutes } from "./features/goals/goals.routes.js";
+import { scheduleRoutes } from "./features/schedule/schedule.routes.js";
+import { musclesRoutes } from "./features/muscles/muscles.routes.js";
+import { alternativesRoutes } from "./features/alternatives/alternatives.routes.js";
+import { nutritionRoutes } from "./features/nutrition/nutrition.routes.js";
+import { photosRoutes } from "./features/photos/photos.routes.js";
+import { measurementsRoutes } from "./features/measurements/measurements.routes.js";
+import { recoveryRoutes } from "./features/recovery/recovery.routes.js";
 import { authenticate } from "./middleware/authenticate.js";
 import { checkOrigin } from "./middleware/checkOrigin.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 export const app = express();
 if (process.env.TRUST_PROXY === "1") app.set("trust proxy", 1);
-app.use(helmet());
-app.use(express.json({ limit: "32kb" }));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: { imgSrc: ["'self'", "data:", "blob:"] },
+    },
+  }),
+);
+app.use(express.json({ limit: "128kb" }));
 app.use("/api", checkOrigin, rateLimit({ windowMs: 60000, limit: 180 }));
 app.get("/api/health", (req, res) => {
   db.prepare("SELECT 1").get();
@@ -39,8 +56,19 @@ workoutCsvRoutes(app);
 categoryRoutes(app);
 exerciseRoutes(app);
 workoutRoutes(app);
+routinesRoutes(app);
+trainingSessionRoutes(app);
 trainingRoutes(app);
 planRoutes(app);
+sharedRoutineRoutes(app);
+goalsRoutes(app);
+scheduleRoutes(app);
+musclesRoutes(app);
+alternativesRoutes(app);
+nutritionRoutes(app);
+photosRoutes(app);
+measurementsRoutes(app);
+recoveryRoutes(app);
 app.use("/api", (req, res) =>
   res.status(404).json({ error: "Endpoint not found." }),
 );

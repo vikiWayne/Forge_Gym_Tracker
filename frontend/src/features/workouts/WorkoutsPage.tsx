@@ -22,8 +22,8 @@ export function WorkoutsPage() {
     <>
       <PageHeader
         eyebrow="YOUR EFFORT, ON THE RECORD"
-        title="Look at you, showing up."
-        description="Every lift has a story. Keep yours here."
+        title="Your workout journal."
+        description="Every set, ready for your next session."
       />
       <WorkoutCsvActions />
       {logs.length ? (

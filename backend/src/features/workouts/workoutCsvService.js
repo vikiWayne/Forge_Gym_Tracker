@@ -126,15 +126,13 @@ export function planImport(csv, userId) {
       newCategories: newCategories.size,
       newExercises: newExercises.size,
       settingsKept,
-      preview: importing
-        .slice(0, 20)
-        .map((workout) => ({
-          id: workout.sourceId,
-          date: workout.date,
-          category: workout.category,
-          exercise: workout.exercise,
-          sets: workout.sets.length,
-        })),
+      preview: importing.slice(0, 20).map((workout) => ({
+        id: workout.sourceId,
+        date: workout.date,
+        category: workout.category,
+        exercise: workout.exercise,
+        sets: workout.sets.length,
+      })),
     },
   };
 }
@@ -190,7 +188,9 @@ export function importWorkouts(csv, userId) {
       );
       workout.sets.forEach((set, index) =>
         db
-          .prepare("INSERT INTO log_sets VALUES(?,?,?,?)")
+          .prepare(
+            "INSERT INTO log_sets(log_id,position,weight,reps) VALUES(?,?,?,?)",
+          )
           .run(id, index + 1, set.weight, set.reps),
       );
       db.prepare("INSERT INTO workout_csv_receipts VALUES(?,?,?,?)").run(

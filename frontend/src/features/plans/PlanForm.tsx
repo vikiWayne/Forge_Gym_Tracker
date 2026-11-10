@@ -32,13 +32,13 @@ export function PlanForm({
     <form onSubmit={submit}>
       <p className="modal-description">
         {planId
-          ? "Invite an existing FORGE username. They’ll choose whether to accept and share their workout logs."
-          : "Accepted members share their historical and future workout logs with the group. You can leave anytime to stop sharing."}
+          ? "Invite an existing public FORGE handle. They choose whether to join and which workouts to share. Email addresses remain private."
+          : "Create a group for your training crew. Your workouts stay private until you choose sharing preferences. Leave anytime to stop access."}
       </p>
       <ErrorMessage message={error} />
       {planId ? (
         <label>
-          Partner’s username
+          Partner’s public handle
           <input
             name="username"
             required

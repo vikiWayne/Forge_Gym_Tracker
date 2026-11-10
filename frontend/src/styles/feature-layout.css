@@ -1,0 +1,213 @@
+/* Shared spacing for the expanded planning and wellbeing pages. */
+body {
+  min-width: 0;
+}
+.explore-section {
+  margin: 30px 0;
+}
+.explore-section > h2 {
+  margin-bottom: 18px;
+}
+.explore-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.explore-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  min-height: 145px;
+}
+.explore-card > div {
+  flex: 1;
+  min-width: 0;
+}
+.explore-card h3 {
+  font-size: 17px;
+  margin: 2px 0 9px;
+}
+.explore-card p {
+  font-size: 14px;
+}
+.explore-card > .lucide {
+  color: var(--accent);
+}
+.explore-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-soft);
+}
+.page-container {
+  padding-bottom: 16px;
+}
+.page-header {
+  align-items: flex-start;
+}
+.page-header > div:first-child {
+  min-width: 0;
+}
+.page-header .page-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.panel h2,
+.panel h3 {
+  overflow-wrap: anywhere;
+}
+.panel form,
+.panel fieldset {
+  min-width: 0;
+}
+.form-actions {
+  flex-wrap: wrap;
+}
+.form-actions .button {
+  white-space: normal;
+  text-align: center;
+}
+.modal {
+  width: 620px;
+}
+.modal form > label {
+  margin: 16px 0;
+}
+.modal .form-row {
+  margin: 16px 0;
+}
+.modal .form-row > label {
+  margin: 0;
+}
+label:has(> .optional) {
+  display: block;
+}
+label:has(> .optional) > input,
+label:has(> .optional) > select,
+label:has(> .optional) > textarea {
+  display: block;
+  margin-top: 9px;
+}
+label > .optional {
+  margin-left: 4px;
+}
+.modal .routine-exercise .set-header,
+.modal .routine-exercise .set-row {
+  gap: 9px;
+}
+.sidebar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.sidebar-bottom {
+  padding-top: 20px;
+}
+.sidebar .nav-label {
+  margin-top: 26px;
+}
+.dashboard-tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+.dashboard-tools a {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+}
+.dashboard-tools a:hover {
+  border-color: var(--accent);
+}
+.dashboard-tools strong {
+  font-size: 15px;
+}
+.dashboard-tools span {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+@media (max-width: 900px) {
+  .explore-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 650px) {
+  .dashboard-tools {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .explore-section {
+    margin: 24px 0;
+  }
+  .explore-grid {
+    gap: 13px;
+  }
+  .explore-card {
+    min-height: 0;
+    padding: 18px;
+    gap: 12px;
+  }
+  .explore-card .panel-icon {
+    padding: 9px;
+  }
+  .explore-card h3 {
+    font-size: 16px;
+  }
+  .explore-card p {
+    font-size: 13px;
+  }
+  .page-header {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .page-header > .button {
+    font-size: 14px;
+    gap: 8px;
+    margin-top: 0;
+    padding: 10px 15px;
+  }
+  .page-header .page-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .section-head {
+    flex-wrap: wrap;
+  }
+  .section-head input,
+  .section-head select {
+    max-width: 100%;
+  }
+  .modal {
+    padding: 21px 18px;
+  }
+  .form-actions {
+    justify-content: stretch;
+  }
+  .form-actions > .button {
+    flex: 1 1 110px;
+  }
+  .mobile-more-menu {
+    max-height: 65dvh;
+    overflow: auto;
+  }
+}
+@media (max-width: 480px) {
+  .modal .form-row,
+  .form-panel .form-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .modal .form-row > label + label {
+    margin-top: 16px;
+  }
+  .form-panel .form-row {
+    gap: 16px;
+    margin: 16px 0 22px;
+  }
+  .form-panel .form-row > label {
+    margin: 0;
+  }
+}

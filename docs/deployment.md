@@ -39,6 +39,8 @@ Back up SQLite using its online backup facility, or stop the application cleanly
 
 The server drains HTTP requests on SIGTERM/SIGINT before closing SQLite. Schema migrations run at startup; back up before deploying a version that changes the schema.
 
-Passwords are hashed and sessions use HttpOnly, SameSite cookies. Account recovery requires a previously saved recovery code; there is no email recovery. Accepted Together memberships share all historical and future workout notes with accepted members. Explain this behavior to users before enabling sharing.
+Passwords are hashed and sessions use HttpOnly, SameSite cookies. Sign-in uses a normalized email; recovery requires that email and a previously saved recovery code. No email verification or delivery is implemented yet. Together memberships default to private workouts; each member explicitly chooses which logs and notes to share. Emails, private journals and photos never appear in shared-plan responses. Photo bytes are stored in the SQLite database, so include them in storage capacity and backup planning.
+
+The service worker caches only public application assets, not API responses or private photos. Device training caches and queued logs are scoped to the signed-in account and cleared on logout/session expiry. Deploy on HTTPS for installation and service-worker support; localhost is supported for development.
 
 Before release, review the live HTTPS login/logout flow, direct page URLs, CSV transfer, backups, invitation consent, keyboard navigation and mobile layouts on the target host. No domain, proxy, external monitoring, or hosting account has been configured by this repository.

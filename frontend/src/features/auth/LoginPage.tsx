@@ -12,7 +12,7 @@ import { OnboardingFlow } from "./OnboardingFlow";
 export function LoginPage() {
   const { user } = useAuth();
   const location = useLocation();
-  const [setupUsername, setSetupUsername] = useState<string | null>(null);
+  const [setupEmail, setSetupEmail] = useState<string | null>(null);
   const [checkingSetup, setCheckingSetup] = useState(true);
   const requestedPath = (location.state as { from?: string } | null)?.from;
   const destination =
@@ -27,9 +27,9 @@ export function LoginPage() {
       setCheckingSetup(false);
       return;
     }
-    void api<{ username: string | null }>("/auth/onboarding")
+    void api<{ email: string | null }>("/auth/onboarding")
       .then((result) => {
-        if (active) setSetupUsername(result.username);
+        if (active) setSetupEmail(result.email);
       })
       .catch(() => {})
       .finally(() => {
@@ -51,13 +51,13 @@ export function LoginPage() {
         <section className="auth-form-panel">
           {checkingSetup ? (
             <LoadingState />
-          ) : setupUsername ? (
+          ) : setupEmail ? (
             <OnboardingFlow
-              username={setupUsername}
-              onRestart={() => setSetupUsername(null)}
+              email={setupEmail}
+              onRestart={() => setSetupEmail(null)}
             />
           ) : (
-            <CredentialsForm onSetup={setSetupUsername} />
+            <CredentialsForm onSetup={setSetupEmail} />
           )}
           <p className="auth-privacy">
             <LockKeyhole size={14} />

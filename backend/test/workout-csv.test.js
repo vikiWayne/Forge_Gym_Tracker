@@ -20,7 +20,7 @@ await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api/workout-csv`;
 for (const id of ["owner", "other"])
-  db.prepare("INSERT INTO users VALUES(?,?,?,?,?,?)").run(
+  db.prepare("INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)").run(
     id,
     id,
     "not-used-by-test",

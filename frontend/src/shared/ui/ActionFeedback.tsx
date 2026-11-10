@@ -47,7 +47,7 @@ export function ActionFeedback() {
           <span className="celebration-check" aria-hidden="true">
             <Check size={17} />
           </span>
-          <span role="status">All set. Keep your momentum.</span>
+          <span role="status">Saved. A little progress made.</span>
           <button
             type="button"
             className="icon-button"

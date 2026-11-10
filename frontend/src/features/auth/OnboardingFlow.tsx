@@ -26,10 +26,10 @@ const steps = [
   },
 ];
 export function OnboardingFlow({
-  username,
+  email,
   onRestart,
 }: {
-  username: string;
+  email: string;
   onRestart: () => void;
 }) {
   const [step, setStep] = useState(0);
@@ -72,7 +72,7 @@ export function OnboardingFlow({
       <div className="onboarding-welcome">
         <span className="section-kicker">YOUR ORIGIN STORY</span>
         <p>
-          Nice to meet you, <strong>{username}</strong>.
+          Nice to meet you, <strong>{email}</strong>.
         </p>
       </div>
       <ol className="onboarding-progress" aria-label="Profile setup progress">
@@ -183,7 +183,7 @@ export function OnboardingFlow({
           })
         }
       >
-        Use a different username or password
+        Use a different email or password
       </button>
     </div>
   );

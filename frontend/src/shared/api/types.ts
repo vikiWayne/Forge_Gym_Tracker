@@ -1,7 +1,34 @@
 export type Category = { id: string; name: string };
-export type WorkoutSet = { weight: number; reps: number };
+export type WorkoutSet = {
+  weight: number;
+  reps: number;
+  rpe?: number | null;
+  rir?: number | null;
+};
+export type RoutineExercise = { exercise_id: string; sets: WorkoutSet[] };
+export type Routine = {
+  id: string;
+  name: string;
+  notes: string;
+  exercises: RoutineExercise[];
+};
+export type TrainingSession = {
+  id: string;
+  name: string;
+  started_at: number;
+  finished_at: number | null;
+  exercises: {
+    exercise_id: string;
+    name: string;
+    sets: (WorkoutSet & { done: boolean })[];
+  }[];
+  rest_seconds: number;
+  rest_until: number | null;
+  notes: string;
+};
 export type User = {
   id: string;
+  email: string;
   username: string;
   age: number;
   weight: number;
@@ -18,6 +45,7 @@ export type Exercise = {
   ready: number;
 };
 export type Log = {
+  pending_sync?: boolean;
   sets: WorkoutSet[];
   user_id?: string;
   id: string;
@@ -30,6 +58,11 @@ export type Log = {
   username?: string;
 };
 export type Plan = {
+  sharing: {
+    mode: "none" | "selected" | "all";
+    include_notes: boolean;
+    selected_log_ids: string[];
+  };
   id: string;
   name: string;
   owner_id: string;

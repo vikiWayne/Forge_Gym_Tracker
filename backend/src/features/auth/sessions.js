@@ -20,6 +20,7 @@ export function publicUser(user) {
   return {
     id: user.id,
     username: user.username,
+    email: user.email,
     age: user.age,
     weight: user.weight,
     sex: user.sex,

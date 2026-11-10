@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { AtSign, Check } from "lucide-react";
+import { AtSign, Check, ChevronDown } from "lucide-react";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { api } from "../../shared/api/client";
 import type { User } from "../../shared/api/types";
@@ -29,22 +29,23 @@ export function UsernameSettings() {
     checking: "Checking availability…",
     available: changed
       ? "That name is available. Make it yours."
-      : "This is your current username.",
-    taken: "That username is taken. Try a different one.",
+      : "This is your current public handle.",
+    taken: "That handle is taken. Try a different one.",
     error: "We couldn’t check right now. Please try again shortly.",
   }[status];
   return (
-    <section className="panel username-settings">
-      <div className="section-head">
-        <div>
-          <span className="section-kicker">YOUR TRAINING IDENTITY</span>
-          <h2>A name that feels like you.</h2>
-        </div>
+    <details className="panel username-settings public-handle-settings">
+      <summary>
         <AtSign size={22} />
-      </div>
+        <div>
+          <strong>Public handle</strong>
+          <span>{user?.username}</span>
+        </div>
+        <ChevronDown size={18} />
+      </summary>
       <form onSubmit={submit}>
         <label>
-          Username
+          Public handle
           <input
             name="username"
             autoComplete="username"
@@ -69,13 +70,13 @@ export function UsernameSettings() {
           {message}
         </p>
         <p className="field-hint">
-          Use your new username for future sign-ins and invitations. Your
+          Use this public handle for invitations. Sign in with your email. Your
           workouts and shared plans stay with your account.
         </p>
         <ErrorMessage message={error} />
         {saved && (
           <p className="success-message" role="status">
-            Username updated. Your new chapter has a name.
+            Public handle updated. Your new chapter has a name.
           </p>
         )}
         <button
@@ -83,9 +84,9 @@ export function UsernameSettings() {
           disabled={pending || !changed || status !== "available"}
         >
           <Check size={16} />
-          {pending ? "Saving…" : "Update username"}
+          {pending ? "Saving…" : "Update public handle"}
         </button>
       </form>
-    </section>
+    </details>
   );
 }

@@ -11,7 +11,12 @@ export const passwordSchema = z
   .min(8, "Use at least 8 characters.")
   .max(128);
 export const credentialsSchema = z.object({
-  username: usernameSchema,
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address.")
+    .max(254),
   password: passwordSchema,
 });
 export const profileSchema = z.object({
@@ -19,4 +24,7 @@ export const profileSchema = z.object({
   weight: bodyWeightSchema,
   sex: z.enum(["Female", "Male", "Other", "Prefer not to say"]),
 });
-export const registrationSchema = credentialsSchema.extend(profileSchema.shape);
+export const registrationSchema = credentialsSchema.extend({
+  ...profileSchema.shape,
+  username: usernameSchema.optional(),
+});
