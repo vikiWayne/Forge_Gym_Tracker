@@ -1,3 +1,4 @@
+import { appFetch } from "./transport";
 import {
   enqueueWorkout,
   offlineAccount,
@@ -35,7 +36,7 @@ export async function api<T = void>(
     : data;
   let response: Response;
   try {
-    response = await fetch(`/api${path}`, {
+    response = await appFetch(`/api${path}`, {
       method,
       signal,
       credentials: "same-origin",

@@ -1,4 +1,5 @@
 import { RouteScrollReset } from "./layout/RouteScrollReset";
+import { NativeWorkoutProvider } from "../features/native/NativeWorkoutProvider";
 import { ForgotPasswordPage } from "../features/security/ForgotPasswordPage";
 import { ActionFeedback } from "../shared/ui/ActionFeedback";
 import { InteractionEffects } from "../shared/ui/InteractionEffects";
@@ -196,9 +197,11 @@ export default function App() {
       >
         <RouteScrollReset />
         <AuthProvider>
-          <AppRoutes />
-          <ActionFeedback />
-          <InteractionEffects />
+          <NativeWorkoutProvider>
+            <AppRoutes />
+            <ActionFeedback />
+            <InteractionEffects />
+          </NativeWorkoutProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

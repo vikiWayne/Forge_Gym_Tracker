@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { Download, RefreshCw } from "lucide-react";
 import {
   activateAppUpdate,
@@ -57,6 +58,7 @@ export function InstallApp() {
       setBusy(false);
     }
   }
+  if (Capacitor.isNativePlatform()) return null;
   return (
     <section className="panel pwa-install-panel" aria-label="Install FORGE">
       <div>

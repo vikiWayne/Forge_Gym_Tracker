@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "concurrently -k \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w frontend",
+    "native:prepare": "node scripts/prepare-native.mjs",
     "test": "npm run check:components && node scripts/check-streak.mjs && npm run test -w backend",
     "check:components": "node scripts/check-component-size.mjs",
     "start": "npm start -w backend",
@@ -15,7 +16,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "prettier": "^3.9.10"
+    "prettier": "^3.9.10",
+    "xcode": "^4.0.0"
   },
   "engines": {
     "node": ">=22.13.0"

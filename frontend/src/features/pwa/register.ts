@@ -13,6 +13,7 @@ export function clearInstallPrompt() {
   installPrompt = null;
 }
 export function registerAppWorker() {
+  if (Capacitor.isNativePlatform()) return;
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     installPrompt = event as InstallPrompt;
@@ -55,3 +56,4 @@ export function activateAppUpdate() {
   );
   registration.waiting.postMessage({ type: "ACTIVATE_UPDATE" });
 }
+import { Capacitor } from "@capacitor/core";

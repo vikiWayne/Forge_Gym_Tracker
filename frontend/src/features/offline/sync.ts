@@ -1,3 +1,4 @@
+import { appFetch } from "../../shared/api/transport";
 import {
   clearOffline,
   notifyOffline,
@@ -16,7 +17,7 @@ export async function syncWorkouts() {
   syncing = true;
   notifyOffline();
   try {
-    const identity = await fetch("/api/me", {
+    const identity = await appFetch("/api/me", {
       credentials: "same-origin",
       cache: "no-store",
     });
@@ -36,7 +37,7 @@ export async function syncWorkouts() {
     for (const item of pendingWorkouts()) {
       if (offlineAccount() !== owner) return;
       try {
-        const response = await fetch("/api/logs", {
+        const response = await appFetch("/api/logs", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },

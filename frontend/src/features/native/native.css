@@ -1,0 +1,31 @@
+.lock-screen-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.lock-screen-control > div {
+  flex: 1 1 230px;
+}
+.lock-screen-control h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.lock-screen-control p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+.lock-screen-control > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .lock-screen-control > .button {
+    width: 100%;
+  }
+}

@@ -1,3 +1,4 @@
+import { appFetch } from "../../shared/api/transport";
 import { useEffect, useState } from "react";
 import { formatDate } from "../../shared/lib/dates";
 import { checkPhotoResponse, type ProgressPhoto } from "./types";
@@ -16,7 +17,7 @@ export function PhotoCard({
     let objectUrl = "";
     setUrl("");
     setError("");
-    void fetch(`/api/photos/${photo.id}/image`, {
+    void appFetch(`/api/photos/${photo.id}/image`, {
       credentials: "same-origin",
       cache: "no-store",
       signal: controller.signal,

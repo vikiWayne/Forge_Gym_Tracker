@@ -1,3 +1,4 @@
+import { appFetch } from "../../shared/api/transport";
 import { useState, type FormEvent } from "react";
 import { useAsyncAction } from "../../shared/hooks/useAsyncAction";
 import { ErrorMessage } from "../../shared/ui/Feedback";
@@ -13,7 +14,7 @@ export function PhotoForm({ onSaved }: { onSaved: () => Promise<void> }) {
     void action.run(async () => {
       if (!file) throw new Error("Choose a photo first.");
       const image = await preparePhoto(file);
-      const response = await fetch("/api/photos", {
+      const response = await appFetch("/api/photos", {
         method: "POST",
         credentials: "same-origin",
         headers: {

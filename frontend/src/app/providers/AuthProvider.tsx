@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refresh();
     const expire = () => {
+      window.dispatchEvent(new Event("forge:pause-lock-screen"));
       clearOffline();
       setUser(null);
     };
@@ -98,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api("/auth/logout", "POST");
     } finally {
+      window.dispatchEvent(new Event("forge:pause-lock-screen"));
       signOutLocally();
       setUser(null);
     }

@@ -2,12 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../../shared/api/client";
 import type { TrainingSession } from "../../shared/api/types";
 import { readOffline, writeOffline } from "../offline/storage";
+import { publishWorkout } from "../native/events";
 
 export function useActiveSession() {
   const [session, setSession] = useState<TrainingSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (!loading) publishWorkout(session);
+  }, [session, loading]);
   const latest = useRef<TrainingSession | null>(null);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -127,6 +131,7 @@ export function useActiveSession() {
     await queue.current.catch(() => {});
     if (latest.current)
       await api(`/training-session/${latest.current.id}`, "DELETE");
+    publishWorkout(null);
     dirty.current = false;
     try {
       writeOffline("active-session", null);
@@ -136,6 +141,7 @@ export function useActiveSession() {
     setSession(null);
   }
   function completed() {
+    publishWorkout(null);
     dirty.current = false;
     try {
       writeOffline("active-session", null);

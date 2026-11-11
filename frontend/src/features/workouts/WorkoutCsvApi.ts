@@ -1,3 +1,4 @@
+import { appFetch } from "../../shared/api/transport";
 export type CsvSummary = {
   workouts: number;
   importing: number;
@@ -21,7 +22,7 @@ export async function checkWorkoutCsv(
   csv: string,
   action: "preview" | "import",
 ): Promise<CsvSummary> {
-  const response = await fetch(`/api/workout-csv/${action}`, {
+  const response = await appFetch(`/api/workout-csv/${action}`, {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "text/csv; charset=utf-8" },
@@ -37,7 +38,7 @@ export async function checkWorkoutCsv(
   return result;
 }
 export async function downloadWorkoutCsv() {
-  const response = await fetch("/api/workout-csv/export", {
+  const response = await appFetch("/api/workout-csv/export", {
     credentials: "same-origin",
   });
   if (!response.ok) {

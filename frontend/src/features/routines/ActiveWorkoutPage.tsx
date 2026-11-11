@@ -14,6 +14,8 @@ import { Modal } from "../../shared/ui/Modal";
 import { RestTimer, clockText } from "../workouts/RestTimer";
 import { useActiveSession } from "./useActiveSession";
 import { SessionMovement } from "./SessionMovement";
+import { LockScreenControl } from "../native/LockScreenControl";
+import { pauseLockScreen } from "../native/events";
 
 export function ActiveWorkoutPage() {
   const state = useActiveSession();
@@ -96,6 +98,7 @@ export function ActiveWorkoutPage() {
         </span>
       </div>
       <ErrorMessage message={state.error || action.error} />
+      <LockScreenControl session={session} />
       {state.error && (
         <button
           className="button secondary"
@@ -161,6 +164,7 @@ export function ActiveWorkoutPage() {
             onClick={() =>
               void action.run(async () => {
                 await state.flush();
+                pauseLockScreen();
                 navigate("/routines");
               })
             }

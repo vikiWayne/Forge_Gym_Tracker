@@ -1,5 +1,9 @@
 # FORGE gym tracker
 
+## Native apps and lock-screen workouts
+
+Android/iOS projects now support optional workout status on the lock screen. Run `npm run native:prepare` to build and sync them. The configurable placeholder API address lives in `frontend/native.config.mjs`; replace it before connecting to your backend. See [native setup and device-testing guide](docs/native-apps.md) for platform requirements, permissions and release steps.
+
 ## Routines, active workouts and records
 
 Open **Routines** (mobile **Train**) to create, edit, reorder or delete reusable sessions. Each routine contains up to 20 movements from your exercise library and 1–50 target sets per movement. Deleting a library exercise requires replacing it in routines before starting them again.
