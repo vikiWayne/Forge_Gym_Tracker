@@ -4,7 +4,7 @@ FORGE now has Capacitor 8 Android and iOS projects. The PWA remains available, a
 
 ## Backend address
 
-The configurable dummy URL is **https://api.example.invalid**. It is intentionally unreachable. Change `nativeApiOrigin` in `frontend/native.config.mjs`, or copy `frontend/.env.example` to `frontend/.env.native.local` and set `VITE_NATIVE_API_URL` to your real HTTPS backend origin. No trailing API path, credentials or query string. These are public build settings, not secrets.
+Production native builds use the Render HTTPS origin in `frontend/api.config.mjs`. For local phone testing, copy `frontend/.env.example` to `frontend/.env.native-local.local`, set `VITE_LOCAL_API_ORIGIN` to your local HTTPS backend, and run `npm run native:prepare -- --local`. The phone must be able to reach the local host and trust its certificate.
 
 From the repository root:
 
@@ -13,7 +13,7 @@ npm ci
 npm run native:prepare
 ```
 
-This compiles to `frontend/dist-native`, then copies the result into both native projects. `npm run build` still builds the PWA to `frontend/dist`. Re-run native preparation whenever the UI or backend address changes. The dummy build can be generated before a backend is deployed, but sign-in and server-backed features require a real backend.
+This compiles to `frontend/dist-native`, then copies the result into both native projects. `npm run build` builds the PWA to `frontend/dist`. Re-run native preparation whenever the UI or backend address changes.
 
 API calls use Capacitor's native HTTP transport and native cookie handling; the existing HttpOnly session authentication, origin checks and browser cookie rules remain in place. All request sites, including offline replay, CSV and private photo transfers, use the native-aware transport. Service-worker registration and PWA installation prompts are disabled inside the native container.
 

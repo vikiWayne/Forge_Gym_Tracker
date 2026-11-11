@@ -2,7 +2,7 @@
 
 ## Native apps and lock-screen workouts
 
-Android/iOS projects now support optional workout status on the lock screen. Run `npm run native:prepare` to build and sync them. The configurable placeholder API address lives in `frontend/native.config.mjs`; replace it before connecting to your backend. See [native setup and device-testing guide](docs/native-apps.md) for platform requirements, permissions and release steps.
+Android/iOS projects support optional workout status on the lock screen. Run `npm run native:prepare` to build and sync them against the production API configured in `frontend/api.config.mjs`. See the [native setup and device-testing guide](docs/native-apps.md) for local builds and platform requirements.
 
 ## Routines, active workouts and records
 
@@ -160,4 +160,4 @@ See [the expanded feature guide](docs/expanded-features.md) for goals, schedulin
 
 Previously signed-in users can reopen cached personal training offline. New manual logs queue on the device and sync with account checks and retry-safe IDs. Active sessions retain a local draft; finishing or discarding a session requires a connection. Together, account/security changes, and private uploads require a connection. Signing out clears device training caches. Production builds include an installable app and an asset-only offline shell; APIs and private photos are never stored in its service-worker cache.
 
-The standard build uses `/`. For a frontend hosted under the existing project subpath, use `npm run build -w frontend -- --mode pages`; its API still needs a same-origin backend. No hosting or email service is configured automatically.
+Production browser and native builds use the Render API origin in `frontend/api.config.mjs`. Serve the production web app from the Render service so sign-in and the API share an origin. Use `npm run dev` for local development or `npm run build:local` for a local build served by Express. See the [deployment guide](docs/deployment.md).

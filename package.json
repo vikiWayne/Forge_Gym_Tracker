@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "concurrently -k \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w frontend",
+    "build:local": "npm run build -w frontend -- --mode development",
     "native:prepare": "node scripts/prepare-native.mjs",
     "test": "npm run check:components && node scripts/check-streak.mjs && npm run test -w backend",
     "check:components": "node scripts/check-component-size.mjs",

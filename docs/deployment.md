@@ -12,9 +12,24 @@ npm run check:release
 npm audit --omit=dev
 ```
 
-## Run with Node.js
+## Run on Render
 
-Build the frontend with `npm run build`. Copy `backend/.env.example` to `backend/.env` and configure:
+For a backend-only service, open **Settings → Build & Deploy → Build Filters** in Render. Keep **Auto-Deploy** set to **On Commit**, leave **Root Directory** blank, and add these entries under **Included Paths**:
+
+```text
+backend/src/**
+backend/package.json
+package.json
+package-lock.json
+```
+
+Leave **Ignored Paths** empty. Backend source and shared dependency changes trigger auto-deploys. Changes confined to frontend files or backend tests skip them. A push that also changes the shared lockfile triggers a deploy.
+
+The production API origin is configured in `frontend/api.config.mjs`. If this service also serves the web app, set the build command to `npm ci --include=dev && npm run build`, set `SERVE_FRONTEND=1`, and include `frontend/**` so web changes are published automatically. Keep `npm start` as the start command. Browser sessions use same-origin cookies, so open the PWA on the Render service URL.
+
+## Run locally with Node.js
+
+Build the frontend with `npm run build:local`. Copy `backend/.env.example` to `backend/.env` and configure:
 
 ```dotenv
 NODE_ENV=production
