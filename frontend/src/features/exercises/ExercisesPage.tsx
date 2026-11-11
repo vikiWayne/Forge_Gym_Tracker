@@ -1,6 +1,6 @@
 import { CategoryActions } from "./CategoryActions";
 import { useState } from "react";
-import { FolderPlus, Plus } from "lucide-react";
+import { FolderPlus, Library, Plus } from "lucide-react";
 import { useTraining } from "../../app/providers/TrainingProvider";
 import { PageHeader } from "../../shared/ui/PageHeader";
 import { EmptyState } from "../../shared/ui/Feedback";
@@ -8,9 +8,11 @@ import { Modal } from "../../shared/ui/Modal";
 import { ExerciseCard } from "./ExerciseCard";
 import { ExerciseForm } from "./ExerciseForm";
 import { CategoryForm } from "./CategoryForm";
+import { ExerciseCatalog } from "../starter/ExerciseCatalog";
 export function ExercisesPage() {
   const { categories, exercises, logs } = useTraining();
   const [dialog, setDialog] = useState<"exercise" | "category" | null>(null);
+  const [browsing, setBrowsing] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState("");
   const groups = categories
@@ -31,6 +33,12 @@ export function ExercisesPage() {
         description="Build your collection. Keep your next movement close."
         action={
           <div className="page-actions">
+            <button
+              className="button secondary"
+              onClick={() => setBrowsing(true)}
+            >
+              <Library size={17} aria-hidden="true" /> Browse exercises
+            </button>
             <button
               className="button secondary"
               onClick={() => setDialog("category")}
@@ -108,6 +116,7 @@ export function ExercisesPage() {
           Create a category such as Push, Pull or Legs, then add your exercises.
         </EmptyState>
       )}
+      {browsing && <ExerciseCatalog close={() => setBrowsing(false)} />}
       {dialog && (
         <Modal
           title={

@@ -1,0 +1,65 @@
+.starter-section {
+  margin-block: 24px;
+}
+.starter-section > .field-hint {
+  margin-bottom: 14px;
+}
+.starter-section .routine-card h3 {
+  margin: 0;
+}
+.starter-section .routine-card li span {
+  flex: 0 0 auto;
+}
+.starter-preview {
+  min-height: 44px;
+  padding: 6px 0;
+  color: var(--primary);
+  background: transparent;
+  border: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.catalog-search {
+  display: grid;
+  gap: 8px;
+  margin-block: 16px;
+}
+.catalog-results {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.catalog-results button {
+  width: 100%;
+  justify-content: space-between;
+  text-align: left;
+  min-height: 48px;
+}
+.catalog-results small {
+  color: var(--text-muted);
+}
+.movement-demo {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px;
+}
+.movement-demo canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+.movement-demo .form-actions {
+  margin: 0;
+}
+.movement-demo ol {
+  margin: 0;
+  padding-inline-start: 24px;
+}
+.movement-demo li + li {
+  margin-top: 6px;
+}

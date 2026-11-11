@@ -4,6 +4,12 @@ import { db } from "../../database/connection.js";
 import { handler } from "../../shared/handler.js";
 import { routineExercise, ownsExercises } from "./routines.routes.js";
 import { effortFields } from "./effort.js";
+import {
+  catalogExercise,
+  movements,
+  starters,
+  withCatalogWrite,
+} from "./starterCatalog.js";
 
 const sessionExercise = routineExercise.extend({
   name: z.string().min(1).max(80),
@@ -27,6 +33,22 @@ function serialize(row) {
   if (!row) return null;
   const { user_id, exercises, ...session } = row;
   return { ...session, exercises: JSON.parse(exercises) };
+}
+function createSession(userId, name, notes, exercises) {
+  const snapshot = exercises.map((item) => ({
+    ...item,
+    name: db
+      .prepare("SELECT name FROM exercises WHERE id=? AND user_id=?")
+      .get(item.exercise_id, userId).name,
+    sets: item.sets.map((set) => ({ ...set, done: false })),
+  }));
+  const id = randomUUID();
+  db.prepare(
+    "INSERT INTO training_sessions(id,user_id,name,started_at,exercises,notes) VALUES(?,?,?,?,?,?)",
+  ).run(id, userId, name, Date.now(), JSON.stringify(snapshot), notes);
+  return serialize(
+    db.prepare("SELECT * FROM training_sessions WHERE id=?").get(id),
+  );
 }
 export function trainingSessionRoutes(app) {
   app.get("/api/training-sessions", (req, res) =>
@@ -52,8 +74,16 @@ export function trainingSessionRoutes(app) {
   app.post(
     "/api/training-session",
     handler((req, res) => {
-      const { routine_id } = z
-        .object({ routine_id: z.string().uuid() })
+      const { routine_id, starter_id } = z
+        .union([
+          z.strictObject({ routine_id: z.string().uuid() }),
+          z.strictObject({ starter_id: z.string().min(1).max(80) }),
+        ])
+        .transform((data) => ({
+          routine_id: undefined,
+          starter_id: undefined,
+          ...data,
+        }))
         .parse(req.body);
       const active = db
         .prepare(
@@ -64,6 +94,22 @@ export function trainingSessionRoutes(app) {
         return res
           .status(409)
           .json({ error: "Resume or discard your active workout first." });
+      if (starter_id) {
+        const starter = starters.find((entry) => entry.id === starter_id);
+        if (!starter)
+          return res.status(404).json({ error: "Starter routine not found." });
+        const session = withCatalogWrite(() => {
+          const exercises = starter.movements.map(({ id, sets, reps }) => ({
+            exercise_id: catalogExercise(
+              req.userId,
+              movements.find((entry) => entry.id === id),
+            ),
+            sets: Array.from({ length: sets }, () => ({ weight: 0, reps })),
+          }));
+          return createSession(req.userId, starter.name, "", exercises);
+        });
+        return res.status(201).json(session);
+      }
       const routine = db
         .prepare("SELECT * FROM routines WHERE id=? AND user_id=?")
         .get(routine_id, req.userId);
@@ -75,30 +121,10 @@ export function trainingSessionRoutes(app) {
           error:
             "This routine contains a deleted exercise. Edit it before starting.",
         });
-      const snapshot = exercises.map((item) => ({
-        ...item,
-        name: db
-          .prepare("SELECT name FROM exercises WHERE id=?")
-          .get(item.exercise_id).name,
-        sets: item.sets.map((set) => ({ ...set, done: false })),
-      }));
-      const id = randomUUID();
-      db.prepare(
-        "INSERT INTO training_sessions(id,user_id,name,started_at,exercises,notes) VALUES(?,?,?,?,?,?)",
-      ).run(
-        id,
-        req.userId,
-        routine.name,
-        Date.now(),
-        JSON.stringify(snapshot),
-        routine.notes,
-      );
       res
         .status(201)
         .json(
-          serialize(
-            db.prepare("SELECT * FROM training_sessions WHERE id=?").get(id),
-          ),
+          createSession(req.userId, routine.name, routine.notes, exercises),
         );
     }),
   );

@@ -28,6 +28,11 @@ export function DashboardPage() {
           .toUpperCase()}
         title="A little progress, every day."
         description="Your pace. Your progress. One small win at a time."
+        action={
+          <Link className="button primary" to="/routines">
+            Start today’s workout
+          </Link>
+        }
       />
       <JourneyCard />
       <DailyQuests />

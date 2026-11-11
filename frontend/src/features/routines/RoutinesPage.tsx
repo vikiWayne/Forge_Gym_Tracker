@@ -13,6 +13,7 @@ import {
 } from "../../shared/ui/Feedback";
 import { Modal } from "../../shared/ui/Modal";
 import { RoutineForm } from "./RoutineForm";
+import { StarterRoutines } from "../starter/StarterRoutines";
 import { clockText } from "../workouts/RestTimer";
 import { formatDate, localDate } from "../../shared/lib/dates";
 type CompletedSession = {
@@ -74,6 +75,7 @@ export function RoutinesPage() {
           </Link>
         </section>
       )}
+      {!loading && !routines.length && <StarterRoutines active={!!active} />}
       {loading ? (
         <LoadingState />
       ) : routines.length ? (
@@ -139,18 +141,15 @@ export function RoutinesPage() {
           ))}
         </div>
       ) : (
+        exercises.length > 0 &&
         !action.error && (
-          <EmptyState
-            title="Your next workout starts here."
-            to={exercises.length ? undefined : "/exercises"}
-            action="Add exercises"
-          >
-            {exercises.length
-              ? "Create a routine with the movements, weights and reps you want to train."
-              : "Add exercises to your library before building your first routine."}
+          <EmptyState title="Your next workout starts here.">
+            Create a routine with the movements, weights and reps you want to
+            train.
           </EmptyState>
         )
       )}
+      {!loading && routines.length > 0 && <StarterRoutines active={!!active} />}
       {!loading && action.error && (
         <button
           className="button secondary"

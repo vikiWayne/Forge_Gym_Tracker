@@ -61,15 +61,17 @@ export function DailyQuests() {
         ? "Resume your workout"
         : exercises.length
           ? "Make a little movement"
-          : "Add your first exercise",
+          : "Try a starter routine",
       description: status.active
         ? status.active.name
-        : "Log a workout, your way.",
+        : exercises.length
+          ? "Log a workout, your way."
+          : "Choose a ready-to-start session.",
       to: status.active
         ? "/workouts/active"
         : exercises.length
           ? "/workouts/new"
-          : "/exercises",
+          : "/routines",
       complete: trained && !status.active,
       icon: Dumbbell,
       tone: "move",

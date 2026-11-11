@@ -2,7 +2,6 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 process.env.DB_PATH = ":memory:";
 const { app } = await import("../src/app.js");
-const { db } = await import("../src/database/connection.js");
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
@@ -52,6 +51,84 @@ async function account(username) {
   );
   return { cookie: user.cookie, exercise_id: exercise.data.id };
 }
+test("starter sessions work for an empty library and reuse owned exercises", async () => {
+  const { cookie } = await request("/auth/register", "POST", {
+    username: "starter_lifter",
+    password: "routine-password",
+    age: 30,
+    weight: 70,
+    sex: "Other",
+  });
+  const catalog = await request("/starter-catalog", "GET", undefined, cookie);
+  assert.equal(catalog.status, 200);
+  assert.equal(catalog.data.starters.length, 3);
+  const payload = { starter_id: "bodyweight-basics" };
+  assert.equal(
+    (
+      await request(
+        "/training-session",
+        "POST",
+        { starter_id: "unknown" },
+        cookie,
+      )
+    ).status,
+    404,
+  );
+  const first = await request("/training-session", "POST", payload, cookie);
+  assert.equal(first.status, 201);
+  assert.equal(first.data.exercises.length, 3);
+  const ids = first.data.exercises.map((entry) => entry.exercise_id);
+  assert.equal(
+    (
+      await request(
+        "/training-session",
+        "POST",
+        { starter_id: "dumbbell-full-body" },
+        cookie,
+      )
+    ).status,
+    409,
+  );
+  const added = await request(
+    "/starter-catalog/movements/squat",
+    "POST",
+    undefined,
+    cookie,
+  );
+  assert.equal(added.data.id, ids[0]);
+  first.data.exercises[0].sets[0].done = true;
+  assert.equal(
+    (
+      await request(
+        `/training-session/${first.data.id}`,
+        "PUT",
+        first.data,
+        cookie,
+      )
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await request(
+        `/training-session/${first.data.id}/finish`,
+        "POST",
+        undefined,
+        cookie,
+      )
+    ).status,
+    200,
+  );
+  const second = await request("/training-session", "POST", payload, cookie);
+  assert.equal(second.status, 201);
+  assert.deepEqual(
+    second.data.exercises.map((entry) => entry.exercise_id),
+    ids,
+  );
+  const data = await request("/data", "GET", undefined, cookie);
+  assert.equal(data.data.exercises.length, 3);
+  assert.equal(data.data.logs.length, 1);
+});
 test("routines and sessions stay owned; completed sets save atomically and finish is idempotent", async () => {
   const owner = await account("routine_owner"),
     other = await account("routine_other");
@@ -306,7 +383,8 @@ test("routines and sessions stay owned; completed sets save atomically and finis
     ).status,
     200,
   );
-  assert.equal(db.prepare("SELECT COUNT(*) AS count FROM logs").get().count, 1);
+  const training = await request("/data", "GET", undefined, owner.cookie);
+  assert.equal(training.data.logs.length, 1);
   assert.equal(
     (await request(`/routines/${id}`, "DELETE", undefined, other.cookie))
       .status,
