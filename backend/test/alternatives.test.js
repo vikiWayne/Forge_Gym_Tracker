@@ -15,7 +15,7 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-alternativesRoutes(app);
+await alternativesRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
@@ -27,17 +27,21 @@ const owner = randomUUID(),
   second = randomUUID(),
   foreign = randomUUID();
 for (const id of [owner, other])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
 for (const [id, user, name] of [
   [first, owner, "Barbell press"],
   [second, owner, "Dumbbell press"],
   [foreign, other, "Other press"],
 ])
-  db.prepare(
-    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-  ).run(id, user, name, "Push", "");
+  await db
+    .prepare(
+      "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+    )
+    .run(id, user, name, "Push", "");
 async function request(path = "", method = "GET", body, user = owner) {
   const response = await fetch(base + path, {
     method,
@@ -115,18 +119,22 @@ test("alternative links are mutual, owned, unique and removed with deleted exerc
     (await request()).data.alternatives[0].note,
     "Cable station alternative",
   );
-  db.prepare("DELETE FROM exercises WHERE id=?").run(first);
+  await db.prepare("DELETE FROM exercises WHERE id=?").run(first);
   assert.deepEqual((await request()).data.alternatives, []);
   assert.equal(
-    db
-      .prepare("SELECT COUNT(*) AS count FROM exercises WHERE user_id=?")
-      .get(owner).count,
+    (
+      await db
+        .prepare("SELECT COUNT(*) AS count FROM exercises WHERE user_id=?")
+        .get(owner)
+    ).count,
     1,
   );
   const third = randomUUID();
-  db.prepare(
-    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-  ).run(third, owner, "Machine press", "Push", "");
+  await db
+    .prepare(
+      "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+    )
+    .run(third, owner, "Machine press", "Push", "");
   const next = await request("", "POST", {
     exercise_a: second,
     exercise_b: third,

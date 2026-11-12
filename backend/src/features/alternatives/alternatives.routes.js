@@ -4,8 +4,8 @@ import { db } from "../../database/connection.js";
 import { handler } from "../../shared/handler.js";
 
 const noteSchema = z.string().trim().max(500).default("");
-export function alternativesRoutes(app) {
-  db.exec(`CREATE TABLE IF NOT EXISTS exercise_alternatives(
+export async function alternativesRoutes(app) {
+  await db.exec(`CREATE TABLE IF NOT EXISTS exercise_alternatives(
     id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),
     exercise_a TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
     exercise_b TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
@@ -14,12 +14,12 @@ export function alternativesRoutes(app) {
     CREATE INDEX IF NOT EXISTS alternatives_user ON exercise_alternatives(user_id);`);
   app.get(
     "/api/alternatives",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const exerciseId =
         req.query.exercise_id === undefined
           ? null
           : z.string().uuid().parse(req.query.exercise_id);
-      const rows = db
+      const rows = await db
         .prepare(
           `SELECT a.id,a.exercise_a,a.exercise_b,a.note,
       x.name AS name_a,y.name AS name_b,x.category AS category_a,y.category AS category_b
@@ -27,22 +27,19 @@ export function alternativesRoutes(app) {
       JOIN exercises y ON y.id=a.exercise_b WHERE a.user_id=? ORDER BY x.name,y.name`,
         )
         .all(req.userId);
-      res
-        .set("Cache-Control", "no-store")
-        .json({
-          alternatives: exerciseId
-            ? rows.filter(
-                (row) =>
-                  row.exercise_a === exerciseId ||
-                  row.exercise_b === exerciseId,
-              )
-            : rows,
-        });
+      res.set("Cache-Control", "no-store").json({
+        alternatives: exerciseId
+          ? rows.filter(
+              (row) =>
+                row.exercise_a === exerciseId || row.exercise_b === exerciseId,
+            )
+          : rows,
+      });
     }),
   );
   app.post(
     "/api/alternatives",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const data = z
         .object({
           exercise_a: z.string().uuid(),
@@ -58,37 +55,37 @@ export function alternativesRoutes(app) {
         "SELECT id FROM exercises WHERE id=? AND user_id=?",
       );
       if (
-        !owned.get(data.exercise_a, req.userId) ||
-        !owned.get(data.exercise_b, req.userId)
+        !(await owned.get(data.exercise_a, req.userId)) ||
+        !(await owned.get(data.exercise_b, req.userId))
       )
         return res
           .status(400)
           .json({ error: "Choose exercises from your own library." });
       const [first, second] = [data.exercise_a, data.exercise_b].sort();
       if (
-        db
+        await db
           .prepare(
             "SELECT id FROM exercise_alternatives WHERE user_id=? AND exercise_a=? AND exercise_b=?",
           )
           .get(req.userId, first, second)
       )
-        return res
-          .status(409)
-          .json({
-            error: "These exercises are already linked in both directions.",
-          });
+        return res.status(409).json({
+          error: "These exercises are already linked in both directions.",
+        });
       const id = randomUUID();
-      db.prepare(
-        "INSERT INTO exercise_alternatives(id,user_id,exercise_a,exercise_b,note) VALUES(?,?,?,?,?)",
-      ).run(id, req.userId, first, second, data.note);
+      await db
+        .prepare(
+          "INSERT INTO exercise_alternatives(id,user_id,exercise_a,exercise_b,note) VALUES(?,?,?,?,?)",
+        )
+        .run(id, req.userId, first, second, data.note);
       res.status(201).json({ id });
     }),
   );
   app.patch(
     "/api/alternatives/:id",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const { note } = z.object({ note: noteSchema }).parse(req.body);
-      const result = db
+      const result = await db
         .prepare(
           "UPDATE exercise_alternatives SET note=? WHERE id=? AND user_id=?",
         )
@@ -96,10 +93,13 @@ export function alternativesRoutes(app) {
       res.status(result.changes ? 200 : 404).json({ ok: !!result.changes });
     }),
   );
-  app.delete("/api/alternatives/:id", (req, res) => {
-    const result = db
-      .prepare("DELETE FROM exercise_alternatives WHERE id=? AND user_id=?")
-      .run(req.params.id, req.userId);
-    res.status(result.changes ? 200 : 404).json({ ok: !!result.changes });
-  });
+  app.delete(
+    "/api/alternatives/:id",
+    handler(async (req, res) => {
+      const result = await db
+        .prepare("DELETE FROM exercise_alternatives WHERE id=? AND user_id=?")
+        .run(req.params.id, req.userId);
+      res.status(result.changes ? 200 : 404).json({ ok: !!result.changes });
+    }),
+  );
 }

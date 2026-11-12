@@ -7,17 +7,16 @@ import {
   dateSchema,
   decimalNumber,
 } from "../../shared/validation.js";
-function syncWeight(userId) {
-  const latest = db
+async function syncWeight(userId) {
+  const latest = await db
     .prepare(
       "SELECT value FROM weight_entries WHERE user_id=? ORDER BY date DESC,rowid DESC LIMIT 1",
     )
     .get(userId);
   if (latest)
-    db.prepare("UPDATE users SET weight=? WHERE id=?").run(
-      latest.value,
-      userId,
-    );
+    await db
+      .prepare("UPDATE users SET weight=? WHERE id=?")
+      .run(latest.value, userId);
 }
 export function trackingRoutes(app) {
   for (const [path, table, valueSchema] of [
@@ -30,80 +29,76 @@ export function trackingRoutes(app) {
       label: z.string().trim().max(100).default(""),
       notes: z.string().max(1000).default(""),
     });
-    app.get(`/api/${path}`, (req, res) =>
-      res.json({
-        entries: db
-          .prepare(
-            `SELECT id,value,date,label,notes FROM ${table} WHERE user_id=? ORDER BY date DESC,rowid DESC`,
-          )
-          .all(req.userId),
-      }),
+    app.get(
+      `/api/${path}`,
+      handler(async (req, res) =>
+        res.json({
+          entries: await db
+            .prepare(
+              `SELECT id,value,date,label,notes FROM ${table} WHERE user_id=? ORDER BY date DESC,rowid DESC`,
+            )
+            .all(req.userId),
+        }),
+      ),
     );
     for (const method of ["post", "put"])
       app[method](
         `/api/${path}${method === "put" ? "/:id" : ""}`,
-        handler((req, res) => {
+        handler(async (req, res) => {
           const data = schema.parse(req.body);
           if (
             method === "put" &&
-            !db
+            !(await db
               .prepare(`SELECT id FROM ${table} WHERE id=? AND user_id=?`)
-              .get(req.params.id, req.userId)
+              .get(req.params.id, req.userId))
           )
             return res.status(404).json({ error: "Entry not found." });
           const id = method === "post" ? randomUUID() : req.params.id;
-          db.exec("BEGIN");
-          try {
+          await db.transaction(async () => {
             if (method === "post")
-              db.prepare(`INSERT INTO ${table} VALUES(?,?,?,?,?,?)`).run(
-                id,
-                req.userId,
-                data.value,
-                data.date,
-                data.label,
-                data.notes,
-              );
+              await db
+                .prepare(`INSERT INTO ${table} VALUES(?,?,?,?,?,?)`)
+                .run(
+                  id,
+                  req.userId,
+                  data.value,
+                  data.date,
+                  data.label,
+                  data.notes,
+                );
             else
-              db.prepare(
-                `UPDATE ${table} SET value=?,date=?,label=?,notes=? WHERE id=? AND user_id=?`,
-              ).run(
-                data.value,
-                data.date,
-                data.label,
-                data.notes,
-                id,
-                req.userId,
-              );
-            if (path === "body-weight") syncWeight(req.userId);
-            db.exec("COMMIT");
-          } catch (error) {
-            db.exec("ROLLBACK");
-            throw error;
-          }
+              await db
+                .prepare(
+                  `UPDATE ${table} SET value=?,date=?,label=?,notes=? WHERE id=? AND user_id=?`,
+                )
+                .run(
+                  data.value,
+                  data.date,
+                  data.label,
+                  data.notes,
+                  id,
+                  req.userId,
+                );
+            if (path === "body-weight") await syncWeight(req.userId);
+          });
           res.status(method === "post" ? 201 : 200).json({ id });
         }),
       );
     app.delete(
       `/api/${path}/:id`,
-      handler((req, res) => {
+      handler(async (req, res) => {
         if (
-          !db
+          !(await db
             .prepare(`SELECT id FROM ${table} WHERE id=? AND user_id=?`)
-            .get(req.params.id, req.userId)
+            .get(req.params.id, req.userId))
         )
           return res.status(404).json({ error: "Entry not found." });
-        db.exec("BEGIN");
-        try {
-          db.prepare(`DELETE FROM ${table} WHERE id=? AND user_id=?`).run(
-            req.params.id,
-            req.userId,
-          );
-          if (path === "body-weight") syncWeight(req.userId);
-          db.exec("COMMIT");
-        } catch (error) {
-          db.exec("ROLLBACK");
-          throw error;
-        }
+        await db.transaction(async () => {
+          await db
+            .prepare(`DELETE FROM ${table} WHERE id=? AND user_id=?`)
+            .run(req.params.id, req.userId);
+          if (path === "body-weight") await syncWeight(req.userId);
+        });
         res.json({ ok: true });
       }),
     );

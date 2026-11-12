@@ -10,9 +10,11 @@ const { errorHandler } = await import("../src/middleware/errorHandler.js");
 const owner = randomUUID(),
   other = randomUUID();
 for (const id of [owner, other])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
 const app = express();
 app.use(express.json({ limit: "128kb" }));
 app.use((req, res, next) => {
@@ -21,7 +23,7 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-photosRoutes(app);
+await photosRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
@@ -116,7 +118,8 @@ test("progress photos remain private, validate upload formats/dates/size, and de
   assert.equal((await request(`/${id}`, "DELETE")).status, 200);
   assert.equal((await request(`/${id}/image`)).status, 404);
   assert.equal(
-    db.prepare("SELECT COUNT(*) AS count FROM progress_photos").get().count,
+    (await db.prepare("SELECT COUNT(*) AS count FROM progress_photos").get())
+      .count,
     0,
   );
 });

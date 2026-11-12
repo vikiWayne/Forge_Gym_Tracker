@@ -18,35 +18,37 @@ export function exerciseRoutes(app) {
     );
   app.post(
     "/api/exercises",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const d = exercise.parse(req.body),
         id = randomUUID();
-      const category = db
+      const category = await db
         .prepare("SELECT * FROM categories WHERE id=? AND user_id=?")
         .get(d.category_id, req.userId);
       if (!category)
         return res
           .status(400)
           .json({ error: "Choose one of your categories." });
-      db.prepare(
-        "INSERT INTO exercises(id,user_id,name,category,notes,ready,rep_min,rep_max,category_id) VALUES(?,?,?,?,?,?,?,?,?)",
-      ).run(
-        id,
-        req.userId,
-        d.name,
-        category.name,
-        d.notes,
-        +d.ready,
-        d.rep_min,
-        d.rep_max,
-        d.category_id,
-      );
+      await db
+        .prepare(
+          "INSERT INTO exercises(id,user_id,name,category,notes,ready,rep_min,rep_max,category_id) VALUES(?,?,?,?,?,?,?,?,?)",
+        )
+        .run(
+          id,
+          req.userId,
+          d.name,
+          category.name,
+          d.notes,
+          +d.ready,
+          d.rep_min,
+          d.rep_max,
+          d.category_id,
+        );
       res.status(201).json({ id });
     }),
   );
   app.patch(
     "/api/exercises/:id",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const d = z
         .object({
           ready: z.boolean().optional(),
@@ -58,13 +60,13 @@ export function exerciseRoutes(app) {
           "Choose a category or readiness state.",
         )
         .parse(req.body);
-      const existing = db
+      const existing = await db
         .prepare("SELECT * FROM exercises WHERE id=? AND user_id=?")
         .get(req.params.id, req.userId);
       if (!existing)
         return res.status(404).json({ error: "Exercise not found." });
       const category = d.category_id
-        ? db
+        ? await db
             .prepare("SELECT * FROM categories WHERE id=? AND user_id=?")
             .get(d.category_id, req.userId)
         : null;
@@ -72,7 +74,7 @@ export function exerciseRoutes(app) {
         return res
           .status(400)
           .json({ error: "Choose one of your categories." });
-      const r = db
+      const r = await db
         .prepare(
           "UPDATE exercises SET ready=?,category_id=?,category=? WHERE id=? AND user_id=?",
         )
@@ -88,60 +90,55 @@ export function exerciseRoutes(app) {
   );
   app.put(
     "/api/exercises/:id",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const data = exercise.parse(req.body);
       if (
-        !db
+        !(await db
           .prepare("SELECT id FROM exercises WHERE id=? AND user_id=?")
-          .get(req.params.id, req.userId)
+          .get(req.params.id, req.userId))
       )
         return res.status(404).json({ error: "Exercise not found." });
-      const category = db
+      const category = await db
         .prepare("SELECT * FROM categories WHERE id=? AND user_id=?")
         .get(data.category_id, req.userId);
       if (!category)
         return res
           .status(400)
           .json({ error: "Choose one of your categories." });
-      db.prepare(
-        "UPDATE exercises SET name=?,category_id=?,category=?,notes=?,rep_min=?,rep_max=? WHERE id=? AND user_id=?",
-      ).run(
-        data.name,
-        category.id,
-        category.name,
-        data.notes,
-        data.rep_min,
-        data.rep_max,
-        req.params.id,
-        req.userId,
-      );
+      await db
+        .prepare(
+          "UPDATE exercises SET name=?,category_id=?,category=?,notes=?,rep_min=?,rep_max=? WHERE id=? AND user_id=?",
+        )
+        .run(
+          data.name,
+          category.id,
+          category.name,
+          data.notes,
+          data.rep_min,
+          data.rep_max,
+          req.params.id,
+          req.userId,
+        );
       res.json({ ok: true });
     }),
   );
   app.delete(
     "/api/exercises/:id",
-    handler((req, res) => {
+    handler(async (req, res) => {
       if (
-        !db
+        !(await db
           .prepare("SELECT id FROM exercises WHERE id=? AND user_id=?")
-          .get(req.params.id, req.userId)
+          .get(req.params.id, req.userId))
       )
         return res.status(404).json({ error: "Exercise not found." });
-      db.exec("BEGIN");
-      try {
-        db.prepare("DELETE FROM logs WHERE exercise_id=? AND user_id=?").run(
-          req.params.id,
-          req.userId,
-        );
-        db.prepare("DELETE FROM exercises WHERE id=? AND user_id=?").run(
-          req.params.id,
-          req.userId,
-        );
-        db.exec("COMMIT");
-      } catch (error) {
-        db.exec("ROLLBACK");
-        throw error;
-      }
+      await db.transaction(async () => {
+        await db
+          .prepare("DELETE FROM logs WHERE exercise_id=? AND user_id=?")
+          .run(req.params.id, req.userId);
+        await db
+          .prepare("DELETE FROM exercises WHERE id=? AND user_id=?")
+          .run(req.params.id, req.userId);
+      });
       res.json({ ok: true });
     }),
   );

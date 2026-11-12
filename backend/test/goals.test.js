@@ -14,19 +14,23 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-goalsRoutes(app);
+await goalsRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api/goals/weekly`;
 for (const id of ["goal-owner", "goal-other"])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other");
-db.prepare(
-  "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-).run("goal-exercise", "goal-owner", "Press", "Push", "");
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other");
+await db
+  .prepare(
+    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+  )
+  .run("goal-exercise", "goal-owner", "Press", "Push", "");
 async function request(method = "GET", body, user = "goal-owner") {
   const response = await fetch(base, {
     method,
@@ -63,7 +67,7 @@ test("weekly target is owned, validates range, counts a workout date once, and r
   const insert = db.prepare(
     "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
   );
-  insert.run(
+  await insert.run(
     "goal-log-1",
     "goal-owner",
     "goal-exercise",
@@ -72,7 +76,7 @@ test("weekly target is owned, validates range, counts a workout date once, and r
     week.today,
     "",
   );
-  insert.run(
+  await insert.run(
     "goal-log-2",
     "goal-owner",
     "goal-exercise",
@@ -83,7 +87,7 @@ test("weekly target is owned, validates range, counts a workout date once, and r
   );
   const old = new Date(`${week.start}T12:00:00Z`);
   old.setUTCDate(old.getUTCDate() - 1);
-  insert.run(
+  await insert.run(
     "goal-log-old",
     "goal-owner",
     "goal-exercise",
@@ -99,7 +103,9 @@ test("weekly target is owned, validates range, counts a workout date once, and r
     (await request("GET", undefined, "goal-other")).data.completed,
     0,
   );
-  db.prepare("DELETE FROM logs WHERE id IN ('goal-log-1','goal-log-2')").run();
+  await db
+    .prepare("DELETE FROM logs WHERE id IN ('goal-log-1','goal-log-2')")
+    .run();
   result = (await request()).data;
   assert.equal(result.completed, 0);
   assert.equal((await request("DELETE")).data.target, null);

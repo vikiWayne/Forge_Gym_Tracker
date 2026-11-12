@@ -234,7 +234,9 @@ test("owned protein and body-weight journals, edits, decimal precision and profi
     400,
   );
   assert.equal(
-    db.prepare("SELECT id FROM users WHERE username=?").get("precision_new"),
+    await db
+      .prepare("SELECT id FROM users WHERE username=?")
+      .get("precision_new"),
     undefined,
   );
   await request(`/protein/${protein.data.id}`, "DELETE", undefined, cookie);
@@ -322,9 +324,11 @@ test("password changes verify current password, revoke other sessions and reset 
     cookie,
   );
   assert.match(code.data.recovery_code, /^FORGE-/);
-  const stored = db
-    .prepare("SELECT recovery_hash FROM account_security WHERE user_id=?")
-    .get(account.data.id).recovery_hash;
+  const stored = (
+    await db
+      .prepare("SELECT recovery_hash FROM account_security WHERE user_id=?")
+      .get(account.data.id)
+  ).recovery_hash;
   assert.notEqual(stored, code.data.recovery_code);
   assert.equal(stored.length, 64);
   assert.equal(

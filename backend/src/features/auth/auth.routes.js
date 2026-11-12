@@ -14,36 +14,46 @@ export function authRoutes(app) {
   app.post(
     "/api/auth/register",
     limit,
-    handler((req, res) => {
+    handler(async (req, res) => {
       const account = registrationSchema.parse(req.body);
-      if (db.prepare("SELECT id FROM users WHERE email=?").get(account.email)) {
+      if (
+        await db
+          .prepare("SELECT id FROM users WHERE email=?")
+          .get(account.email)
+      ) {
         return res.status(409).json({
           error:
             "This email already has an account. Sign in with its password.",
         });
       }
       const id = randomUUID();
-      const username = availableHandle(account.username);
-      if (db.prepare("SELECT id FROM users WHERE username=?").get(username))
+      const username = await availableHandle(account.username);
+      if (
+        await db.prepare("SELECT id FROM users WHERE username=?").get(username)
+      )
         return res
           .status(409)
           .json({ error: "That public handle is taken. Choose another one." });
-      db.prepare(
-        "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-      ).run(
-        id,
-        username,
-        hashPassword(account.password),
-        account.age,
-        account.weight,
-        account.sex,
-        account.email,
-      );
-      const recovery_code = issueRecoveryCode(id);
+      await db
+        .prepare(
+          "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+        )
+        .run(
+          id,
+          username,
+          hashPassword(account.password),
+          account.age,
+          account.weight,
+          account.sex,
+          account.email,
+        );
+      const recovery_code = await issueRecoveryCode(id);
       res.set("Cache-Control", "no-store");
-      createSession(res, id);
+      await createSession(res, id);
       res.status(201).json({
-        ...publicUser(db.prepare("SELECT * FROM users WHERE id=?").get(id)),
+        ...publicUser(
+          await db.prepare("SELECT * FROM users WHERE id=?").get(id),
+        ),
         recovery_code,
       });
     }),
@@ -51,16 +61,16 @@ export function authRoutes(app) {
   app.post(
     "/api/auth/login",
     limit,
-    handler((req, res) => {
+    handler(async (req, res) => {
       const credentials = credentialsSchema.parse(req.body);
-      const user = db
+      const user = await db
         .prepare("SELECT * FROM users WHERE email=?")
         .get(credentials.email);
       if (!verifyPassword(credentials.password, user?.password))
         return res
           .status(401)
           .json({ error: "Email or password is incorrect." });
-      createSession(res, user.id);
+      await createSession(res, user.id);
       res.json(publicUser(user));
     }),
   );

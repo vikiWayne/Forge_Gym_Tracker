@@ -15,24 +15,28 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-musclesRoutes(app);
+await musclesRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api/muscles`;
 for (const id of ["muscle-owner", "muscle-other"])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
 for (const [id, owner] of [
   ["press", "muscle-owner"],
   ["row", "muscle-other"],
   ["untagged", "muscle-owner"],
 ])
-  db.prepare(
-    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-  ).run(id, owner, id, "Training", "");
+  await db
+    .prepare(
+      "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+    )
+    .run(id, owner, id, "Training", "");
 async function request(path = "", body, user = "muscle-owner") {
   const response = await fetch(base + path, {
     method: body === undefined ? "GET" : "PUT",
@@ -75,13 +79,17 @@ test("muscle tags are owned, validated, count each saved set per tag and recalcu
     ["unassigned", "muscle-owner", "untagged", week.today, 1],
     ["other", "muscle-other", "row", week.today, 5],
   ]) {
-    db.prepare(
-      "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
-    ).run(id, owner, exercise, 30, 8, date, "");
+    await db
+      .prepare(
+        "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
+      )
+      .run(id, owner, exercise, 30, 8, date, "");
     for (let index = 1; index <= count; index++)
-      db.prepare(
-        "INSERT INTO log_sets(log_id,position,weight,reps) VALUES(?,?,?,?)",
-      ).run(id, index, 30, 8);
+      await db
+        .prepare(
+          "INSERT INTO log_sets(log_id,position,weight,reps) VALUES(?,?,?,?)",
+        )
+        .run(id, index, 30, 8);
   }
   let result = (await request()).data;
   assert.equal(result.summary.find((row) => row.muscle === "Chest").sets, 3);
@@ -105,7 +113,7 @@ test("muscle tags are owned, validated, count each saved set per tag and recalcu
     result.summary.find((row) => row.muscle === "Shoulders").sets,
     3,
   );
-  db.prepare("DELETE FROM logs WHERE id='press1'").run();
+  await db.prepare("DELETE FROM logs WHERE id='press1'").run();
   assert.equal(
     (await request()).data.summary.find((row) => row.muscle === "Shoulders")
       .sets,

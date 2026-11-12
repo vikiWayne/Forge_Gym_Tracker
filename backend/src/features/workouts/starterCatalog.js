@@ -103,8 +103,8 @@ export const starters = [
   },
 ];
 
-export function catalogExercise(userId, movement) {
-  const existing = db
+export async function catalogExercise(userId, movement) {
+  const existing = await db
     .prepare(
       "SELECT id FROM exercises WHERE user_id=? AND name=? COLLATE NOCASE ORDER BY rowid LIMIT 1",
     )
@@ -112,36 +112,26 @@ export function catalogExercise(userId, movement) {
   if (existing) return existing.id;
 
   const categoryName = "Starter movements";
-  db.prepare(
-    "INSERT OR IGNORE INTO categories(id,user_id,name) VALUES(?,?,?)",
-  ).run(randomUUID(), userId, categoryName);
-  const category = db
+  await db
+    .prepare("INSERT OR IGNORE INTO categories(id,user_id,name) VALUES(?,?,?)")
+    .run(randomUUID(), userId, categoryName);
+  const category = await db
     .prepare("SELECT id,name FROM categories WHERE user_id=? AND name=?")
     .get(userId, categoryName);
   const id = randomUUID();
-  db.prepare(
-    "INSERT INTO exercises(id,user_id,name,category,notes,category_id) VALUES(?,?,?,?,?,?)",
-  ).run(
-    id,
-    userId,
-    movement.name,
-    category.name,
-    movement.cues.join("\n"),
-    category.id,
-  );
+  await db
+    .prepare(
+      "INSERT INTO exercises(id,user_id,name,category,notes,category_id) VALUES(?,?,?,?,?,?)",
+    )
+    .run(
+      id,
+      userId,
+      movement.name,
+      category.name,
+      movement.cues.join("\n"),
+      category.id,
+    );
   return id;
-}
-
-export function withCatalogWrite(write) {
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    const result = write();
-    db.exec("COMMIT");
-    return result;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
-  }
 }
 
 export function starterCatalogRoutes(app) {
@@ -150,11 +140,13 @@ export function starterCatalogRoutes(app) {
   );
   app.post(
     "/api/starter-catalog/movements/:id",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const movement = movements.find((entry) => entry.id === req.params.id);
       if (!movement)
         return res.status(404).json({ error: "Movement not found." });
-      const id = withCatalogWrite(() => catalogExercise(req.userId, movement));
+      const id = await db.transaction(() =>
+        catalogExercise(req.userId, movement),
+      );
       res.json({ id });
     }),
   );

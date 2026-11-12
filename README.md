@@ -12,7 +12,7 @@ Start a routine to open workout mode. Adjust actual weights/reps, check complete
 
 Manual workout entry and workout mode both display the latest saved session for the selected exercise (excluding the log being edited and dates after the selected date). **Progress** shows all-time heaviest weight, maximum reps, estimated one-rep max, best volume per exercise log, and weight records by rep count. The Epley estimate uses sets of 1–10 reps; records recalculate from saved sets after edits and deletions, independently of chart time filters.
 
-React + TypeScript frontend and Express API with persistent SQLite storage. Users sign in with email and a password. Training pages are protected and display saved account data. Public handles are used for Together; sign-in emails stay private. The app never automatically seeds accounts or logs, and local databases are excluded from release artifacts.
+React + TypeScript frontend and Express API with Turso in production and SQLite for local development. Users sign in with email and a password. Training pages are protected and display saved account data. Public handles are used for Together; sign-in emails stay private. The app never automatically seeds accounts or logs, and local databases are excluded from release artifacts.
 
 ## Run locally
 
@@ -79,7 +79,7 @@ frontend/src/
   styles/              # Theme tokens, layout and feature styling
 backend/src/
   features/            # Auth, profile, categories, exercises, workouts, plans
-  database/            # SQLite connection and schema migrations
+  database/            # Turso and local SQLite connections, schema migrations
   middleware/          # Session checks, origin validation and errors
   shared/              # Common request handler
   app.js               # Middleware and feature composition

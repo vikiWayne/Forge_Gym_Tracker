@@ -15,7 +15,7 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-scheduleRoutes(app);
+await scheduleRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
@@ -28,21 +28,31 @@ const owner = randomUUID(),
   exercise = randomUUID(),
   log = randomUUID();
 for (const id of [owner, other])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other", `${id}@example.test`);
-db.prepare(
-  "INSERT INTO routines(id,user_id,name,notes,exercises) VALUES(?,?,?,?,?)",
-).run(routine, owner, "Push day", "", "[]");
-db.prepare(
-  "INSERT INTO routines(id,user_id,name,notes,exercises) VALUES(?,?,?,?,?)",
-).run(foreignRoutine, other, "Private routine", "", "[]");
-db.prepare(
-  "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-).run(exercise, owner, "Press", "Push", "");
-db.prepare(
-  "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
-).run(log, owner, exercise, 30, 10, "2026-11-06", "");
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other", `${id}@example.test`);
+await db
+  .prepare(
+    "INSERT INTO routines(id,user_id,name,notes,exercises) VALUES(?,?,?,?,?)",
+  )
+  .run(routine, owner, "Push day", "", "[]");
+await db
+  .prepare(
+    "INSERT INTO routines(id,user_id,name,notes,exercises) VALUES(?,?,?,?,?)",
+  )
+  .run(foreignRoutine, other, "Private routine", "", "[]");
+await db
+  .prepare(
+    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+  )
+  .run(exercise, owner, "Press", "Push", "");
+await db
+  .prepare(
+    "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
+  )
+  .run(log, owner, exercise, 30, 10, "2026-11-06", "");
 async function request(path = "", method = "GET", body, user = owner) {
   const response = await fetch(base + path, {
     method,
@@ -119,10 +129,13 @@ test("schedule supports future planning, owned CRUD and explicit completed-work 
   );
   assert.equal((await request(`/${id}`, "DELETE")).status, 200);
   // Deleting a routine preserves dated plans without blocking deletion.
-  db.prepare("DELETE FROM routines WHERE id=?").run(routine);
+  await db.prepare("DELETE FROM routines WHERE id=?").run(routine);
   const retained = (await request()).data.entries[0];
   assert.equal(retained.routine_id, null);
   assert.equal(retained.routine_name, "Push day");
   assert.equal((await request(`/${retained.id}`, "DELETE")).status, 200);
-  assert.equal(db.prepare("SELECT COUNT(*) AS count FROM logs").get().count, 1);
+  assert.equal(
+    (await db.prepare("SELECT COUNT(*) AS count FROM logs").get()).count,
+    1,
+  );
 });

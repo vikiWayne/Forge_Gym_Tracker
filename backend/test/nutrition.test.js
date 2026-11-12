@@ -16,16 +16,18 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-nutritionRoutes(app);
+await nutritionRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api/nutrition/target`;
 for (const id of ["nutrition-owner", "nutrition-other"])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
 async function request(method = "GET", body, user = "nutrition-owner") {
   const response = await fetch(base, {
     method,
@@ -53,9 +55,9 @@ test("protein targets are owned, precise, and reflect only today's saved intake"
   const insert = db.prepare(
     "INSERT INTO protein_entries(id,user_id,value,date,label,notes) VALUES(?,?,?,?,?,?)",
   );
-  insert.run("n1", "nutrition-owner", 25.12, today, "", "");
-  insert.run("n2", "nutrition-owner", 30.13, today, "", "");
-  insert.run(
+  await insert.run("n1", "nutrition-owner", 25.12, today, "", "");
+  await insert.run("n2", "nutrition-owner", 30.13, today, "", "");
+  await insert.run(
     "n3",
     "nutrition-owner",
     999,
@@ -63,7 +65,7 @@ test("protein targets are owned, precise, and reflect only today's saved intake"
     "",
     "",
   );
-  insert.run("n4", "nutrition-other", 500, today, "", "");
+  await insert.run("n4", "nutrition-other", 500, today, "", "");
   let result = (await request()).data;
   assert.deepEqual(result, {
     date: today,
@@ -71,11 +73,11 @@ test("protein targets are owned, precise, and reflect only today's saved intake"
     logged: 55.25,
     remaining: 65,
   });
-  db.prepare("UPDATE protein_entries SET value=100 WHERE id='n2'").run();
+  await db.prepare("UPDATE protein_entries SET value=100 WHERE id='n2'").run();
   result = (await request()).data;
   assert.equal(result.logged, 125.12);
   assert.equal(result.remaining, 0);
-  db.prepare("DELETE FROM protein_entries WHERE id='n1'").run();
+  await db.prepare("DELETE FROM protein_entries WHERE id='n1'").run();
   assert.equal((await request()).data.logged, 100);
   result = (await request("DELETE")).data;
   assert.equal(result.target, null);

@@ -2,8 +2,8 @@ import { db } from "../../database/connection.js";
 import { handler } from "../../shared/handler.js";
 import { z } from "zod";
 
-export function initializeSharing() {
-  db.exec(`CREATE TABLE IF NOT EXISTS plan_sharing(
+export async function initializeSharing() {
+  await db.exec(`CREATE TABLE IF NOT EXISTS plan_sharing(
     plan_id TEXT NOT NULL,user_id TEXT NOT NULL,mode TEXT NOT NULL DEFAULT 'none',
     include_notes INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(plan_id,user_id),
     FOREIGN KEY(plan_id,user_id) REFERENCES members(plan_id,user_id) ON DELETE CASCADE);
@@ -12,8 +12,8 @@ export function initializeSharing() {
     PRIMARY KEY(plan_id,user_id,log_id),
     FOREIGN KEY(plan_id,user_id) REFERENCES members(plan_id,user_id) ON DELETE CASCADE);`);
 }
-export function sharingFor(planId, userId) {
-  const preference = db
+export async function sharingFor(planId, userId) {
+  const preference = await db
     .prepare(
       "SELECT mode,include_notes FROM plan_sharing WHERE plan_id=? AND user_id=?",
     )
@@ -21,16 +21,17 @@ export function sharingFor(planId, userId) {
   return {
     mode: preference?.mode || "none",
     include_notes: Boolean(preference?.include_notes),
-    selected_log_ids: db
-      .prepare(
-        "SELECT log_id FROM plan_shared_logs WHERE plan_id=? AND user_id=? ORDER BY log_id",
-      )
-      .all(planId, userId)
-      .map((row) => row.log_id),
+    selected_log_ids: (
+      await db
+        .prepare(
+          "SELECT log_id FROM plan_shared_logs WHERE plan_id=? AND user_id=? ORDER BY log_id",
+        )
+        .all(planId, userId)
+    ).map((row) => row.log_id),
   };
 }
-export function sharedLogs(planId, viewerId) {
-  return db
+export async function sharedLogs(planId, viewerId) {
+  return await db
     .prepare(
       `SELECT l.id,l.user_id,l.exercise_id,l.weight,l.reps,l.date,
     CASE WHEN l.user_id=? OR p.include_notes=1 THEN l.notes ELSE '' END AS notes,
@@ -52,8 +53,8 @@ export function sharingRoutes(app) {
   });
   app.put(
     "/api/plans/:id/sharing",
-    handler((req, res) => {
-      const membership = db
+    handler(async (req, res) => {
+      const membership = await db
         .prepare("SELECT accepted FROM members WHERE plan_id=? AND user_id=?")
         .get(req.params.id, req.userId);
       if (!membership?.accepted)
@@ -63,28 +64,28 @@ export function sharingRoutes(app) {
       const data = schema.parse(req.body);
       const ids = [...new Set(data.selected_log_ids)];
       const owned = db.prepare("SELECT id FROM logs WHERE id=? AND user_id=?");
-      if (ids.some((id) => !owned.get(id, req.userId)))
+      const selections = await Promise.all(
+        ids.map((id) => owned.get(id, req.userId)),
+      );
+      if (!selections.every(Boolean))
         return res
           .status(400)
           .json({ error: "Select workouts from your own journal." });
-      db.exec("BEGIN");
-      try {
-        db.prepare(
-          "INSERT INTO plan_sharing(plan_id,user_id,mode,include_notes) VALUES(?,?,?,?) ON CONFLICT(plan_id,user_id) DO UPDATE SET mode=excluded.mode,include_notes=excluded.include_notes",
-        ).run(req.params.id, req.userId, data.mode, +data.include_notes);
-        db.prepare(
-          "DELETE FROM plan_shared_logs WHERE plan_id=? AND user_id=?",
-        ).run(req.params.id, req.userId);
+      await db.transaction(async () => {
+        await db
+          .prepare(
+            "INSERT INTO plan_sharing(plan_id,user_id,mode,include_notes) VALUES(?,?,?,?) ON CONFLICT(plan_id,user_id) DO UPDATE SET mode=excluded.mode,include_notes=excluded.include_notes",
+          )
+          .run(req.params.id, req.userId, data.mode, +data.include_notes);
+        await db
+          .prepare("DELETE FROM plan_shared_logs WHERE plan_id=? AND user_id=?")
+          .run(req.params.id, req.userId);
         const insert = db.prepare(
           "INSERT INTO plan_shared_logs(plan_id,user_id,log_id) VALUES(?,?,?)",
         );
-        for (const id of ids) insert.run(req.params.id, req.userId, id);
-        db.exec("COMMIT");
-      } catch (error) {
-        db.exec("ROLLBACK");
-        throw error;
-      }
-      res.json(sharingFor(req.params.id, req.userId));
+        for (const id of ids) await insert.run(req.params.id, req.userId, id);
+      });
+      res.json(await sharingFor(req.params.id, req.userId));
     }),
   );
 }

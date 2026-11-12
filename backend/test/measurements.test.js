@@ -18,12 +18,14 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-measurementsRoutes(app);
+await measurementsRoutes(app);
 app.use(errorHandler);
 for (const id of ["measurement-owner", "measurement-other"])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other", `${id}@example.com`);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());

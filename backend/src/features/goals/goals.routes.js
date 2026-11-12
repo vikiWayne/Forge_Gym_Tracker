@@ -22,41 +22,55 @@ function indiaDate() {
     day: "2-digit",
   }).format(new Date());
 }
-export function goalsRoutes(app) {
-  db.exec(`CREATE TABLE IF NOT EXISTS weekly_goals(
+export async function goalsRoutes(app) {
+  await db.exec(`CREATE TABLE IF NOT EXISTS weekly_goals(
     user_id TEXT PRIMARY KEY REFERENCES users(id),
     target INTEGER NOT NULL CHECK(target BETWEEN 1 AND 7)
   )`);
-  function summary(userId) {
+  async function summary(userId) {
     const week = goalWeek();
     const target =
-      db.prepare("SELECT target FROM weekly_goals WHERE user_id=?").get(userId)
-        ?.target ?? null;
-    const dates = db
-      .prepare(
-        "SELECT DISTINCT date FROM logs WHERE user_id=? AND date>=? AND date<=? ORDER BY date",
-      )
-      .all(userId, week.start, week.today)
-      .map((row) => row.date);
+      (
+        await db
+          .prepare("SELECT target FROM weekly_goals WHERE user_id=?")
+          .get(userId)
+      )?.target ?? null;
+    const dates = (
+      await db
+        .prepare(
+          "SELECT DISTINCT date FROM logs WHERE user_id=? AND date>=? AND date<=? ORDER BY date",
+        )
+        .all(userId, week.start, week.today)
+    ).map((row) => row.date);
     return { target, completed: dates.length, dates, week };
   }
-  app.get("/api/goals/weekly", (req, res) => {
-    res.set("Cache-Control", "no-store").json(summary(req.userId));
-  });
+  app.get(
+    "/api/goals/weekly",
+    handler(async (req, res) => {
+      res.set("Cache-Control", "no-store").json(await summary(req.userId));
+    }),
+  );
   app.put(
     "/api/goals/weekly",
-    handler((req, res) => {
+    handler(async (req, res) => {
       const { target } = z
         .object({ target: z.number().int().min(1).max(7) })
         .parse(req.body);
-      db.prepare(
-        "INSERT INTO weekly_goals(user_id,target) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET target=excluded.target",
-      ).run(req.userId, target);
-      res.json(summary(req.userId));
+      await db
+        .prepare(
+          "INSERT INTO weekly_goals(user_id,target) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET target=excluded.target",
+        )
+        .run(req.userId, target);
+      res.json(await summary(req.userId));
     }),
   );
-  app.delete("/api/goals/weekly", (req, res) => {
-    db.prepare("DELETE FROM weekly_goals WHERE user_id=?").run(req.userId);
-    res.json(summary(req.userId));
-  });
+  app.delete(
+    "/api/goals/weekly",
+    handler(async (req, res) => {
+      await db
+        .prepare("DELETE FROM weekly_goals WHERE user_id=?")
+        .run(req.userId);
+      res.json(await summary(req.userId));
+    }),
+  );
 }

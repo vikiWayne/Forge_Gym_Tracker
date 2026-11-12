@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 
 process.env.DB_PATH = ":memory:";
+process.env.NODE_ENV = "test";
+await import("../src/database/connection.js");
 process.env.NODE_ENV = "production";
 process.env.SERVE_FRONTEND = "1";
 const { app } = await import("../src/app.js");

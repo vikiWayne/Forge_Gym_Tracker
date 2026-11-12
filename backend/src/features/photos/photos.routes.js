@@ -38,27 +38,30 @@ function imageType(bytes) {
     return "image/webp";
   return null;
 }
-export function photosRoutes(app) {
-  db.exec(`CREATE TABLE IF NOT EXISTS progress_photos(
+export async function photosRoutes(app) {
+  await db.exec(`CREATE TABLE IF NOT EXISTS progress_photos(
     id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),date TEXT NOT NULL,
     caption TEXT NOT NULL DEFAULT '',content_type TEXT NOT NULL,bytes BLOB NOT NULL,created_at INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS photos_user_date ON progress_photos(user_id,date);`);
-  app.get("/api/photos", (req, res) => {
-    res.set("Cache-Control", "no-store").json({
-      photos: db
-        .prepare(
-          "SELECT id,date,caption,content_type,created_at,length(bytes) AS size FROM progress_photos WHERE user_id=? ORDER BY date DESC,created_at DESC",
-        )
-        .all(req.userId),
-    });
-  });
+  app.get(
+    "/api/photos",
+    handler(async (req, res) => {
+      res.set("Cache-Control", "no-store").json({
+        photos: await db
+          .prepare(
+            "SELECT id,date,caption,content_type,created_at,length(bytes) AS size FROM progress_photos WHERE user_id=? ORDER BY date DESC,created_at DESC",
+          )
+          .all(req.userId),
+      });
+    }),
+  );
   app.post(
     "/api/photos",
     express.raw({
       type: ["image/jpeg", "image/png", "image/webp"],
       limit: "2mb",
     }),
-    handler((req, res) => {
+    handler(async (req, res) => {
       let captionHeader;
       try {
         captionHeader =
@@ -87,34 +90,42 @@ export function photosRoutes(app) {
           error: "Choose a valid JPEG, PNG or WebP image up to 2 MiB.",
         });
       const id = randomUUID();
-      db.prepare(
-        "INSERT INTO progress_photos(id,user_id,date,caption,content_type,bytes,created_at) VALUES(?,?,?,?,?,?,?)",
-      ).run(id, req.userId, date, caption, contentType, req.body, Date.now());
+      await db
+        .prepare(
+          "INSERT INTO progress_photos(id,user_id,date,caption,content_type,bytes,created_at) VALUES(?,?,?,?,?,?,?)",
+        )
+        .run(id, req.userId, date, caption, contentType, req.body, Date.now());
       res.set("Cache-Control", "no-store").status(201).json({ id });
     }),
   );
-  app.get("/api/photos/:id/image", (req, res) => {
-    const photo = db
-      .prepare(
-        "SELECT content_type,bytes FROM progress_photos WHERE id=? AND user_id=?",
-      )
-      .get(req.params.id, req.userId);
-    if (!photo) return res.status(404).json({ error: "Photo not found." });
-    res
-      .set({
-        "Content-Type": photo.content_type,
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
-        "Content-Disposition": "inline",
-      })
-      .send(Buffer.from(photo.bytes));
-  });
-  app.delete("/api/photos/:id", (req, res) => {
-    const result = db
-      .prepare("DELETE FROM progress_photos WHERE id=? AND user_id=?")
-      .run(req.params.id, req.userId);
-    res
-      .status(result.changes ? 200 : 404)
-      .json({ ok: Boolean(result.changes) });
-  });
+  app.get(
+    "/api/photos/:id/image",
+    handler(async (req, res) => {
+      const photo = await db
+        .prepare(
+          "SELECT content_type,bytes FROM progress_photos WHERE id=? AND user_id=?",
+        )
+        .get(req.params.id, req.userId);
+      if (!photo) return res.status(404).json({ error: "Photo not found." });
+      res
+        .set({
+          "Content-Type": photo.content_type,
+          "Cache-Control": "private, no-store",
+          "X-Content-Type-Options": "nosniff",
+          "Content-Disposition": "inline",
+        })
+        .send(Buffer.from(photo.bytes));
+    }),
+  );
+  app.delete(
+    "/api/photos/:id",
+    handler(async (req, res) => {
+      const result = await db
+        .prepare("DELETE FROM progress_photos WHERE id=? AND user_id=?")
+        .run(req.params.id, req.userId);
+      res
+        .status(result.changes ? 200 : 404)
+        .json({ ok: Boolean(result.changes) });
+    }),
+  );
 }

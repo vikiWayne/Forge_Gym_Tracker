@@ -14,20 +14,17 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-workoutCsvRoutes(app);
+await workoutCsvRoutes(app);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 const base = `http://127.0.0.1:${server.address().port}/api/workout-csv`;
 for (const id of ["owner", "other"])
-  db.prepare("INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)").run(
-    id,
-    id,
-    "not-used-by-test",
-    30,
-    70,
-    "Other",
-  );
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)",
+    )
+    .run(id, id, "not-used-by-test", 30, 70, "Other");
 async function request(path, user = "owner", csv) {
   const response = await fetch(base + path, {
     method: csv === undefined ? "GET" : "POST",
@@ -88,21 +85,24 @@ test("CSV preview/import/export round trip preserves sets and quoted text, remai
   assert.equal(preview.data.importing, 1);
   assert.equal(preview.data.sets, 2);
   assert.equal(preview.data.newCategories, 1);
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM logs").get().n, 0);
+  assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM logs").get()).n, 0);
   const imported = await request("/import", "owner", csv);
   assert.equal(imported.status, 200);
   assert.equal(imported.data.importing, 1);
-  const log = db.prepare("SELECT * FROM logs WHERE user_id=?").get("owner");
+  const log = await db
+    .prepare("SELECT * FROM logs WHERE user_id=?")
+    .get("owner");
   assert.equal(log.weight, 40.5);
   assert.equal(log.reps, 8);
   assert.equal(log.notes, notes);
   assert.deepEqual(
-    db
-      .prepare(
-        "SELECT weight,reps FROM log_sets WHERE log_id=? ORDER BY position",
-      )
-      .all(log.id)
-      .map((set) => ({ ...set })),
+    (
+      await db
+        .prepare(
+          "SELECT weight,reps FROM log_sets WHERE log_id=? ORDER BY position",
+        )
+        .all(log.id)
+    ).map((set) => ({ ...set })),
     [
       { weight: 30.25, reps: 12 },
       { weight: 40.5, reps: 8 },
@@ -117,16 +117,22 @@ test("CSV preview/import/export round trip preserves sets and quoted text, remai
   assert.equal(decoded[0].workout_notes, notes);
   const ownExport = await request("/preview", "owner", exported.data);
   assert.equal(ownExport.data.skipped, 1);
-  assert.equal((await request("/export", "other")).data, encodeCsv([]).replace(/^\uFEFF/, ""));
+  assert.equal(
+    (await request("/export", "other")).data,
+    encodeCsv([]).replace(/^\uFEFF/, ""),
+  );
 });
 test("invalid files and conflicting IDs fail atomically; another account can import its own copy", async () => {
   const valid = encodeCsv([
     row({ workout_id: "atomic-valid" }),
     row({ workout_id: "atomic-invalid", weight_kg: "1.234" }),
   ]);
-  const before = db.prepare("SELECT COUNT(*) AS n FROM logs").get().n;
+  const before = (await db.prepare("SELECT COUNT(*) AS n FROM logs").get()).n;
   assert.equal((await request("/import", "owner", valid)).status, 400);
-  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM logs").get().n, before);
+  assert.equal(
+    (await db.prepare("SELECT COUNT(*) AS n FROM logs").get()).n,
+    before,
+  );
   for (const csv of [
     encodeCsv([row({ workout_id: "gap", set_number: 2 })]),
     encodeCsv([
@@ -144,8 +150,10 @@ test("invalid files and conflicting IDs fail atomically; another account can imp
   assert.equal((await request("/import", "owner", conflict)).status, 400);
   const copy = encodeCsv([row({ workout_id: "source-workout-1" })]);
   assert.equal((await request("/import", "other", copy)).data.importing, 1);
-  const settings = db
-    .prepare("SELECT COUNT(*) AS n FROM exercises WHERE user_id=?")
-    .get("other").n;
+  const settings = (
+    await db
+      .prepare("SELECT COUNT(*) AS n FROM exercises WHERE user_id=?")
+      .get("other")
+  ).n;
   assert.equal(settings, 1);
 });

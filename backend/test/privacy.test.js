@@ -17,16 +17,26 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"];
   next();
 });
-planRoutes(app);
+await planRoutes(app);
 app.use(errorHandler);
 for (const [id, username] of [
   [owner, "owner"],
   [partner, "partner"],
   [stranger, "stranger"],
 ]) {
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, username, "unused", 30, 70, "Other", `${username}@private.example`);
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex,email) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(
+      id,
+      username,
+      "unused",
+      30,
+      70,
+      "Other",
+      `${username}@private.example`,
+    );
 }
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
@@ -40,24 +50,30 @@ async function request(path, user = owner, method = "GET", data) {
   });
   return { status: response.status, data: await response.json() };
 }
-function log(user, notes = "private workout notes") {
+async function log(user, notes = "private workout notes") {
   const exerciseId = randomUUID(),
     id = randomUUID();
-  db.prepare(
-    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-  ).run(exerciseId, user, "Press", "Push", "private exercise notes");
-  db.prepare(
-    "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, user, exerciseId, 40, 8, "2026-11-06", notes);
-  db.prepare(
-    "INSERT INTO log_sets(log_id,position,weight,reps) VALUES(?,?,?,?)",
-  ).run(id, 1, 40, 8);
+  await db
+    .prepare(
+      "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+    )
+    .run(exerciseId, user, "Press", "Push", "private exercise notes");
+  await db
+    .prepare(
+      "INSERT INTO logs(id,user_id,exercise_id,weight,reps,date,notes) VALUES(?,?,?,?,?,?,?)",
+    )
+    .run(id, user, exerciseId, 40, 8, "2026-11-06", notes);
+  await db
+    .prepare(
+      "INSERT INTO log_sets(log_id,position,weight,reps) VALUES(?,?,?,?)",
+    )
+    .run(id, 1, 40, 8);
   return id;
 }
 test("accepted members control workouts and notes independently; all server responses enforce privacy", async () => {
-  const first = log(owner),
-    second = log(owner),
-    partnerLog = log(partner);
+  const first = await log(owner),
+    second = await log(owner),
+    partnerLog = await log(partner);
   const plan = await request("/plans", owner, "POST", {
     name: "Training crew",
   });
@@ -135,7 +151,7 @@ test("accepted members control workouts and notes independently; all server resp
     JSON.stringify(viewed).includes("private exercise notes"),
     false,
   );
-  const future = log(owner);
+  const future = await log(owner);
   assert.equal(
     (await request("/plans", partner)).data[0].logs.some(
       (item) => item.id === future,

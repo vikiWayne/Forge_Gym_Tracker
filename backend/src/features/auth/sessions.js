@@ -1,13 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { db } from "../../database/connection.js";
-export function createSession(response, userId) {
+export async function createSession(response, userId) {
   const token = randomBytes(32).toString("hex");
-  db.prepare("DELETE FROM sessions WHERE expires<=?").run(Date.now());
-  db.prepare("INSERT INTO sessions VALUES(?,?,?)").run(
-    token,
-    userId,
-    Date.now() + 604800000,
-  );
+  await db.prepare("DELETE FROM sessions WHERE expires<=?").run(Date.now());
+  await db
+    .prepare("INSERT INTO sessions VALUES(?,?,?)")
+    .run(token, userId, Date.now() + 604800000);
   response.cookie("session", token, {
     httpOnly: true,
     sameSite: "strict",

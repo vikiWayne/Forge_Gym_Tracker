@@ -1,3 +1,4 @@
+import { handler } from "./shared/handler.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { db } from "./database/connection.js";
@@ -43,34 +44,37 @@ app.use(
 );
 app.use(express.json({ limit: "128kb" }));
 app.use("/api", checkOrigin, rateLimit({ windowMs: 60000, limit: 180 }));
-app.get("/api/health", (req, res) => {
-  db.prepare("SELECT 1").get();
-  res.set("Cache-Control", "no-store").json({ status: "ok" });
-});
+app.get(
+  "/api/health",
+  handler(async (req, res) => {
+    await db.prepare("SELECT 1").get();
+    res.set("Cache-Control", "no-store").json({ status: "ok" });
+  }),
+);
 authRoutes(app);
 passwordResetRoutes(app);
 app.use("/api", authenticate);
 profileRoutes(app);
 securityRoutes(app);
 trackingRoutes(app);
-workoutCsvRoutes(app);
+await workoutCsvRoutes(app);
 categoryRoutes(app);
 exerciseRoutes(app);
-workoutRoutes(app);
+await workoutRoutes(app);
 routinesRoutes(app);
 trainingSessionRoutes(app);
 starterCatalogRoutes(app);
 trainingRoutes(app);
-planRoutes(app);
-sharedRoutineRoutes(app);
-goalsRoutes(app);
-scheduleRoutes(app);
-musclesRoutes(app);
-alternativesRoutes(app);
-nutritionRoutes(app);
-photosRoutes(app);
-measurementsRoutes(app);
-recoveryRoutes(app);
+await planRoutes(app);
+await sharedRoutineRoutes(app);
+await goalsRoutes(app);
+await scheduleRoutes(app);
+await musclesRoutes(app);
+await alternativesRoutes(app);
+await nutritionRoutes(app);
+await photosRoutes(app);
+await measurementsRoutes(app);
+await recoveryRoutes(app);
 app.use("/api", (req, res) =>
   res.status(404).json({ error: "Endpoint not found." }),
 );

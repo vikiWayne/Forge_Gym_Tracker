@@ -370,7 +370,9 @@ test("one-door authentication, onboarding, and username availability", async () 
   assert.equal(start.data.status, "onboarding");
   assert.match(start.cookie, /onboarding=.+/);
   assert.equal(
-    db.prepare("SELECT id FROM users WHERE username=?").get("fresh_lifter"),
+    await db
+      .prepare("SELECT id FROM users WHERE username=?")
+      .get("fresh_lifter"),
     undefined,
   );
   assert.equal(
@@ -529,11 +531,13 @@ test("one-door authentication, onboarding, and username availability", async () 
     409,
   );
   assert.equal(
-    db
-      .prepare(
-        "SELECT COUNT(*) AS count FROM onboarding_drafts WHERE username=?",
-      )
-      .get("fresh_lifter").count,
+    (
+      await db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM onboarding_drafts WHERE username=?",
+        )
+        .get("fresh_lifter")
+    ).count,
     0,
   );
 });

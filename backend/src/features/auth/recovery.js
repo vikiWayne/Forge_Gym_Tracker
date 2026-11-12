@@ -6,12 +6,14 @@ export function recoveryHash(code) {
     .digest("hex");
 }
 const unavailableHash = recoveryHash(randomBytes(32).toString("hex"));
-export function issueRecoveryCode(userId) {
+export async function issueRecoveryCode(userId) {
   const raw = randomBytes(16).toString("hex").toUpperCase();
   const code = `FORGE-${raw.match(/.{8}/g).join("-")}`;
-  db.prepare(
-    "INSERT INTO account_security VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET recovery_hash=excluded.recovery_hash",
-  ).run(userId, recoveryHash(code));
+  await db
+    .prepare(
+      "INSERT INTO account_security VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET recovery_hash=excluded.recovery_hash",
+    )
+    .run(userId, recoveryHash(code));
   return code;
 }
 export function verifyRecovery(code, hash) {

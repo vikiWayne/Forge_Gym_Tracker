@@ -13,19 +13,23 @@ app.use((req, res, next) => {
   req.userId = req.headers["x-test-user"] || "offline-owner";
   next();
 });
-workoutRoutes(app);
+await workoutRoutes(app);
 app.use(errorHandler);
 const server = app.listen(0, "127.0.0.1");
 await new Promise((resolve) => server.once("listening", resolve));
 after(() => server.close());
 for (const id of ["offline-owner", "offline-other"])
-  db.prepare(
-    "INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)",
-  ).run(id, id, "unused", 30, 70, "Other");
+  await db
+    .prepare(
+      "INSERT INTO users(id,username,password,age,weight,sex) VALUES(?,?,?,?,?,?)",
+    )
+    .run(id, id, "unused", 30, 70, "Other");
 const exercise = randomUUID();
-db.prepare(
-  "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
-).run(exercise, "offline-owner", "Press", "Push", "");
+await db
+  .prepare(
+    "INSERT INTO exercises(id,user_id,name,category,notes) VALUES(?,?,?,?,?)",
+  )
+  .run(exercise, "offline-owner", "Press", "Push", "");
 const base = `http://127.0.0.1:${server.address().port}/api/logs`;
 async function post(body, user = "offline-owner") {
   const response = await fetch(base, {
@@ -43,19 +47,28 @@ test("offline replay is idempotent, owned, and rejects changed payloads", async 
     date: "2026-11-06",
     notes: "Saved while offline",
   };
-  const first = await post(body);
-  assert.equal(first.status, 201);
-  const retry = await post(body);
-  assert.equal(retry.status, 200);
+  const responses = await Promise.all([post(body), post(body)]);
+  assert.deepEqual(
+    responses.map((response) => response.status).sort(),
+    [200, 201],
+  );
+  const first = responses.find((response) => response.status === 201);
+  const retry = responses.find((response) => response.status === 200);
   assert.equal(retry.data.id, first.data.id);
-  assert.equal(db.prepare("SELECT COUNT(*) AS count FROM logs").get().count, 1);
+  assert.equal(
+    (await db.prepare("SELECT COUNT(*) AS count FROM logs").get()).count,
+    1,
+  );
   assert.equal((await post({ ...body, notes: "Changed" })).status, 409);
   assert.equal((await post(body, "offline-other")).status, 400);
   assert.equal((await post({ ...body, client_id: "bad" })).status, 400);
-  db.prepare("DELETE FROM logs WHERE id=?").run(first.data.id);
+  await db.prepare("DELETE FROM logs WHERE id=?").run(first.data.id);
   assert.equal(
-    db.prepare("SELECT COUNT(*) AS count FROM offline_workout_receipts").get()
-      .count,
+    (
+      await db
+        .prepare("SELECT COUNT(*) AS count FROM offline_workout_receipts")
+        .get()
+    ).count,
     0,
   );
 });

@@ -1,10 +1,11 @@
 import { db } from "../database/connection.js";
-export function authenticate(req, res, next) {
+import { handler } from "../shared/handler.js";
+export const authenticate = handler(async (req, res, next) => {
   const token = req.headers.cookie
     ?.split(/;\s*/)
     .find((cookie) => cookie.startsWith("session="))
     ?.slice(8);
-  const session = db
+  const session = await db
     .prepare("SELECT * FROM sessions WHERE token=? AND expires>?")
     .get(token || "", Date.now());
   if (!session)
@@ -12,4 +13,4 @@ export function authenticate(req, res, next) {
   req.userId = session.user_id;
   req.token = token;
   next();
-}
+});

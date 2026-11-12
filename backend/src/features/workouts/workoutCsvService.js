@@ -7,91 +7,112 @@ import {
   WorkoutCsvError,
 } from "./workoutCsvFormat.js";
 import { validateWorkouts } from "./workoutCsvValidation.js";
-export function initializeCsvImports() {
-  db.exec(
+import { setInserts } from "./saveSets.js";
+import { withSets } from "./serialize.js";
+export async function initializeCsvImports() {
+  await db.exec(
     "CREATE TABLE IF NOT EXISTS workout_csv_receipts(user_id TEXT NOT NULL REFERENCES users(id),source_id TEXT NOT NULL,fingerprint TEXT NOT NULL,log_id TEXT NOT NULL REFERENCES logs(id) ON DELETE CASCADE,PRIMARY KEY(user_id,source_id))",
   );
 }
-function existingWorkout(logId, userId) {
-  const row = db
+export async function exportWorkouts(userId) {
+  const sets = await db
     .prepare(
-      "SELECT l.*,e.name AS exercise,e.category FROM logs l JOIN exercises e ON e.id=l.exercise_id WHERE l.id=? AND l.user_id=?",
-    )
-    .get(logId, userId);
-  return row
-    ? {
-        ...row,
-        sets: db
-          .prepare(
-            "SELECT weight,reps FROM log_sets WHERE log_id=? ORDER BY position",
-          )
-          .all(logId),
-      }
-    : null;
-}
-export function exportWorkouts(userId) {
-  const logs = db
-    .prepare(
-      "SELECT l.*,e.name AS exercise,e.category,e.notes AS exercise_notes,e.rep_min,e.rep_max FROM logs l JOIN exercises e ON e.id=l.exercise_id WHERE l.user_id=? ORDER BY l.date,l.rowid",
+      `SELECT l.id,l.date,l.notes,e.name AS exercise,e.category,e.notes AS exercise_notes,
+       e.rep_min,e.rep_max,s.position,s.weight,s.reps
+       FROM logs l JOIN exercises e ON e.id=l.exercise_id
+       JOIN log_sets s ON s.log_id=l.id WHERE l.user_id=? ORDER BY l.date,l.rowid,s.position`,
     )
     .all(userId);
-  const rows = logs.flatMap((log) =>
-    db
-      .prepare("SELECT * FROM log_sets WHERE log_id=? ORDER BY position")
-      .all(log.id)
-      .map((set) => ({
-        format_version: CSV_VERSION,
-        workout_id: log.id,
-        date: log.date,
-        category: log.category,
-        exercise: log.exercise,
-        exercise_notes: log.exercise_notes,
-        rep_min: log.rep_min,
-        rep_max: log.rep_max,
-        set_number: set.position,
-        weight_kg: set.weight.toFixed(2),
-        reps: set.reps,
-        workout_notes: log.notes,
-      })),
+  return encodeCsv(
+    sets.map((set) => ({
+      format_version: CSV_VERSION,
+      workout_id: set.id,
+      date: set.date,
+      category: set.category,
+      exercise: set.exercise,
+      exercise_notes: set.exercise_notes,
+      rep_min: set.rep_min,
+      rep_max: set.rep_max,
+      set_number: set.position,
+      weight_kg: set.weight.toFixed(2),
+      reps: set.reps,
+      workout_notes: set.notes,
+    })),
   );
-  return encodeCsv(rows);
 }
-export function planImport(csv, userId) {
+
+// SQLite NOCASE folds only ASCII letters.
+const fold = (name) => name.replace(/[A-Z]/g, (letter) => letter.toLowerCase());
+const exerciseKey = (categoryId, name) =>
+  JSON.stringify([categoryId, fold(name)]);
+
+export async function planImport(csv, userId) {
   const workouts = validateWorkouts(csv),
     newCategories = new Set(),
     newExercises = new Set();
+  const sourceIds = JSON.stringify(workouts.map((workout) => workout.sourceId));
+  const receipts = new Map(
+    (
+      await db
+        .prepare(
+          "SELECT * FROM workout_csv_receipts WHERE user_id=? AND source_id IN (SELECT value FROM json_each(?))",
+        )
+        .all(userId, sourceIds)
+    ).map((receipt) => [receipt.source_id, receipt]),
+  );
+  const logIds = JSON.stringify(
+    workouts.map(({ sourceId }) => receipts.get(sourceId)?.log_id ?? sourceId),
+  );
+  const existingLogs = new Map(
+    (
+      await withSets(
+        await db
+          .prepare(
+            `SELECT l.*,e.name AS exercise,e.category FROM logs l JOIN exercises e ON e.id=l.exercise_id
+     WHERE l.user_id=? AND l.id IN (SELECT value FROM json_each(?))`,
+          )
+          .all(userId, logIds),
+      )
+    ).map((log) => [log.id, log]),
+  );
+  const categories = new Map(
+    (
+      await db
+        .prepare("SELECT id,name FROM categories WHERE user_id=?")
+        .all(userId)
+    ).map((category) => [fold(category.name), category]),
+  );
+  const exercises = new Map();
+  for (const row of await db
+    .prepare("SELECT * FROM exercises WHERE user_id=?")
+    .all(userId)) {
+    const key = exerciseKey(row.category_id, row.name);
+    if (!exercises.has(key)) exercises.set(key, []);
+    exercises.get(key).push(row);
+  }
   let skipped = 0,
     settingsKept = 0;
   const planned = workouts.map((workout) => {
     const digest = fingerprint(workout);
-    const receipt = db
-      .prepare(
-        "SELECT * FROM workout_csv_receipts WHERE user_id=? AND source_id=?",
-      )
-      .get(userId, workout.sourceId);
-    const existing = existingWorkout(
-      receipt?.log_id || workout.sourceId,
-      userId,
-    );
+    const receipt = receipts.get(workout.sourceId);
+    const existing = existingLogs.get(receipt?.log_id ?? workout.sourceId);
     if (existing) {
-      if ((receipt ? receipt.fingerprint : fingerprint(existing)) !== digest)
+      const savedFingerprint =
+        receipt?.fingerprint ??
+        fingerprint({
+          ...existing,
+          sets: existing.sets.map(({ weight, reps }) => ({ weight, reps })),
+        });
+      if (savedFingerprint !== digest)
         throw new WorkoutCsvError(
           `Workout ${workout.sourceId} already exists with different content. Import never overwrites existing workouts; use a new workout_id only for a genuinely new workout.`,
         );
       skipped++;
       return { ...workout, digest, skip: true };
     }
-    const category = db
-      .prepare(
-        "SELECT * FROM categories WHERE user_id=? AND name=? COLLATE NOCASE",
-      )
-      .get(userId, workout.category);
+    const category = categories.get(fold(workout.category));
     const matches = category
-      ? db
-          .prepare(
-            "SELECT * FROM exercises WHERE user_id=? AND category_id=? AND name=? COLLATE NOCASE",
-          )
-          .all(userId, category.id, workout.exercise)
+      ? (exercises.get(exerciseKey(category.id, workout.exercise)) ?? [])
       : [];
     if (matches.length > 1)
       throw new WorkoutCsvError(
@@ -118,6 +139,8 @@ export function planImport(csv, userId) {
   const importing = planned.filter((workout) => !workout.skip);
   return {
     planned,
+    categories,
+    exercises,
     summary: {
       workouts: workouts.length,
       importing: importing.length,
@@ -136,74 +159,68 @@ export function planImport(csv, userId) {
     },
   };
 }
-export function importWorkouts(csv, userId) {
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    const { planned, summary } = planImport(csv, userId);
+export async function importWorkouts(csv, userId) {
+  return await db.transaction(async () => {
+    const { planned, summary, categories, exercises } = await planImport(
+      csv,
+      userId,
+    );
+    const statements = [];
     for (const workout of planned) {
       if (workout.skip) continue;
-      let category = db
-        .prepare(
-          "SELECT id FROM categories WHERE user_id=? AND name=? COLLATE NOCASE",
-        )
-        .get(userId, workout.category);
+      const categoryKey = fold(workout.category);
+      let category = categories.get(categoryKey);
       if (!category) {
         category = { id: randomUUID() };
-        db.prepare("INSERT INTO categories VALUES(?,?,?)").run(
-          category.id,
-          userId,
-          workout.category,
-        );
+        categories.set(categoryKey, category);
+        statements.push({
+          sql: "INSERT INTO categories VALUES(?,?,?)",
+          args: [category.id, userId, workout.category],
+        });
       }
-      let exercise = db
-        .prepare(
-          "SELECT id FROM exercises WHERE user_id=? AND category_id=? AND name=? COLLATE NOCASE",
-        )
-        .get(userId, category.id, workout.exercise);
+      const key = exerciseKey(category.id, workout.exercise);
+      let exercise = exercises.get(key)?.[0];
       if (!exercise) {
         exercise = { id: randomUUID() };
-        db.prepare(
-          "INSERT INTO exercises(id,user_id,name,category,notes,ready,rep_min,rep_max,category_id) VALUES(?,?,?,?,?,0,?,?,?)",
-        ).run(
-          exercise.id,
-          userId,
-          workout.exercise,
-          workout.category,
-          workout.exercise_notes,
-          workout.rep_min,
-          workout.rep_max,
-          category.id,
-        );
+        exercises.set(key, [exercise]);
+        statements.push({
+          sql: "INSERT INTO exercises(id,user_id,name,category,notes,ready,rep_min,rep_max,category_id) VALUES(?,?,?,?,?,0,?,?,?)",
+          args: [
+            exercise.id,
+            userId,
+            workout.exercise,
+            workout.category,
+            workout.exercise_notes,
+            workout.rep_min,
+            workout.rep_max,
+            category.id,
+          ],
+        });
       }
       const id = randomUUID(),
         best = workout.sets.reduce((a, b) => (b.weight > a.weight ? b : a));
-      db.prepare("INSERT INTO logs VALUES(?,?,?,?,?,?,?)").run(
-        id,
-        userId,
-        exercise.id,
-        best.weight,
-        best.reps,
-        workout.date,
-        workout.notes,
-      );
-      workout.sets.forEach((set, index) =>
-        db
-          .prepare(
-            "INSERT INTO log_sets(log_id,position,weight,reps) VALUES(?,?,?,?)",
-          )
-          .run(id, index + 1, set.weight, set.reps),
-      );
-      db.prepare("INSERT INTO workout_csv_receipts VALUES(?,?,?,?)").run(
-        userId,
-        workout.sourceId,
-        workout.digest,
-        id,
+      statements.push(
+        {
+          sql: "INSERT INTO logs VALUES(?,?,?,?,?,?,?)",
+          args: [
+            id,
+            userId,
+            exercise.id,
+            best.weight,
+            best.reps,
+            workout.date,
+            workout.notes,
+          ],
+        },
+        ...setInserts(id, workout.sets),
+        {
+          sql: "INSERT INTO workout_csv_receipts VALUES(?,?,?,?)",
+          args: [userId, workout.sourceId, workout.digest, id],
+        },
       );
     }
-    db.exec("COMMIT");
+    for (let start = 0; start < statements.length; start += 200)
+      await db.batch(statements.slice(start, start + 200));
     return summary;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
-  }
+  });
 }
